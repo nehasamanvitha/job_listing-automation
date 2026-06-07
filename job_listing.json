@@ -1,0 +1,1908 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {},
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "19fbf37c-5091-4414-98e7-4ea35a931f8c",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "actorId": {
+          "__rl": true,
+          "value": "MXLpngmVpE8WTESQr",
+          "mode": "list",
+          "cachedResultName": "🚀 Indeed jobs scraper [PPR] (borderline/indeed-scraper)",
+          "cachedResultUrl": "https://console.apify.com/actors/MXLpngmVpE8WTESQr/input"
+        },
+        "customBody": "{\n    \"country\": \"us\",\n    \"enableUniqueJobs\": false,\n    \"includeSimilarJobs\": false,\n    \"maxRows\": 10,\n    \"query\": \"SEO\"\n}",
+        "authentication": "apifyOAuth2Api"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "51a2ea84-cc4f-49a0-a50b-0e1dfc8e2c52",
+      "name": "Run an Actor",
+      "credentials": {
+        "apifyOAuth2Api": {
+          "id": "aOOvSORhDYdrYx0S",
+          "name": "Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "Datasets",
+        "datasetId": "={{ $json.defaultDatasetId }}",
+        "options": {},
+        "authentication": "apifyOAuth2Api"
+      },
+      "type": "@apify/n8n-nodes-apify.apify",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "e75ff134-e37d-436f-9624-c87f5eba410b",
+      "name": "Get dataset items",
+      "credentials": {
+        "apifyOAuth2Api": {
+          "id": "aOOvSORhDYdrYx0S",
+          "name": "Apify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "maxItems": 5
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "05536c80-53b6-44e9-a3cd-592d8edc8665",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are a job filtering assistant.\n\nHere is job data:\n{{ JSON.stringify($input.all()) }}\n\nReturn ALL valid jobs. Do NOT limit.\n\nReturn ONLY JSON array. No explanation.\n\n[\n  {\n    \"title\": \"\",\n    \"company\": \"\",\n    \"location\": \"\",\n    \"apply_link\": \"\",\n    \"score\": \"\",\n    \"reason\": \"\"\n  }\n]\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        832,
+        0
+      ],
+      "id": "ca94d395-d684-4204-96f1-b31be8e002bd",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "U1Gb5dcvnLtLGNI4",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $json.output?.[0]?.content?.[0]?.text || \"\";\n\n// extract JSON\nconst match = raw.match(/\\[.*\\]/s);\n\nif (!match) {\n  return [{ json: { error: \"No JSON found\", raw_output: raw } }];\n}\n\nconst jobs = JSON.parse(match[0]);\n\n// 👇 THIS RETURNS ALL JOBS\nreturn jobs.map(job => ({ json: job }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        0
+      ],
+      "id": "cc28ea25-22aa-45fe-8021-680a101233bd",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1j_A0bt0oI9oRiTGD0hoPZzHly9XpVrfS1J0FLntFP3A",
+          "mode": "list",
+          "cachedResultName": "job_auto",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1j_A0bt0oI9oRiTGD0hoPZzHly9XpVrfS1J0FLntFP3A/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1j_A0bt0oI9oRiTGD0hoPZzHly9XpVrfS1J0FLntFP3A/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "title": "={{$json.title}}",
+            "location": "={{$json.location}}",
+            "apply link": "={{$json.apply_link}}",
+            "score": "={{$json.score}}",
+            "reason": "={{$json.reason}}",
+            "company": "={{$json.company}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "location",
+              "displayName": "location",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "apply link",
+              "displayName": "apply link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1392,
+        0
+      ],
+      "id": "8f08a3c5-3736-4636-9300-085822e32bcd",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "7aEWYlJN60nBCC96",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Run an Actor": [
+      {
+        "json": {
+          "id": "QcirqDuGg5cbAQBX4",
+          "actId": "MXLpngmVpE8WTESQr",
+          "userId": "NuNdkL5xDAAgwGTKG",
+          "startedAt": "2026-06-06T16:51:09.231Z",
+          "finishedAt": "2026-06-06T16:51:42.149Z",
+          "status": "SUCCEEDED",
+          "meta": {
+            "origin": "API",
+            "userAgent": "n8n"
+          },
+          "stats": {
+            "inputBodyLen": 95,
+            "migrationCount": 0,
+            "rebootCount": 0,
+            "restartCount": 0,
+            "durationMillis": 32808,
+            "resurrectCount": 0,
+            "runTimeSecs": 32.808,
+            "metamorph": 0,
+            "computeUnits": 0.004556666666666666,
+            "memAvgBytes": 60235820.44534833,
+            "memMaxBytes": 65155072,
+            "memCurrentBytes": 0,
+            "cpuAvgUsage": 1.254457423528539,
+            "cpuMaxUsage": 62.09560975609756,
+            "cpuCurrentUsage": 0,
+            "netRxBytes": 210968,
+            "netTxBytes": 69425
+          },
+          "options": {
+            "build": "0.0.170",
+            "timeoutSecs": 3600,
+            "memoryMbytes": 512,
+            "maxItems": 989,
+            "maxTotalChargeUsd": 4.949997,
+            "diskMbytes": 2048
+          },
+          "buildId": "kdKYKaNNLDO8l0gNg",
+          "exitCode": 0,
+          "defaultKeyValueStoreId": "EDdFZhbLxHa2cf6C0",
+          "defaultDatasetId": "bLoRe7dDVIbOqgLl1",
+          "defaultRequestQueueId": "6U1MGc06gzoC19Bc5",
+          "storageIds": {
+            "keyValueStores": {
+              "default": "EDdFZhbLxHa2cf6C0"
+            },
+            "datasets": {
+              "default": "bLoRe7dDVIbOqgLl1"
+            },
+            "requestQueues": {
+              "default": "6U1MGc06gzoC19Bc5"
+            }
+          },
+          "pricingInfo": {
+            "pricingModel": "PAY_PER_EVENT",
+            "createdAt": "2026-02-26T08:01:12.129Z",
+            "startedAt": "2026-02-26T08:01:12.129Z",
+            "apifyMarginPercentage": 0.2,
+            "isPriceChangeNotificationSuppressed": true,
+            "reasonForChange": "Migration from Pay Per Result to Pay Per Event with apify-default-dataset-item event",
+            "forceContainsSignificantPriceChange": false,
+            "pricingPerEvent": {
+              "actorChargeEvents": {
+                "apify-default-dataset-item": {
+                  "eventTitle": "job",
+                  "eventDescription": "Single job in the default dataset.",
+                  "isPrimaryEvent": true,
+                  "eventPriceUsd": 0.005
+                }
+              }
+            }
+          },
+          "chargedEventCounts": {
+            "apify-default-dataset-item": 10
+          },
+          "platformUsageBillingModel": "DEVELOPER",
+          "accountedChargedEventCounts": {
+            "apify-default-dataset-item": 10
+          },
+          "integrationTracking": {
+            "platform": "n8n",
+            "appId": null,
+            "isAiTool": false
+          },
+          "generalAccess": "FOLLOW_USER_SETTING",
+          "buildNumber": "0.0.170",
+          "containerUrl": "https://waxujyuahf80.runs.apify.net",
+          "usageTotalUsd": 0.05,
+          "consoleUrl": "https://console.apify.com/view/runs/QcirqDuGg5cbAQBX4"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Get dataset items": [
+      {
+        "json": {
+          "jobKey": "7193db2e19c78d6c",
+          "scrapingInfo": {
+            "page": 1,
+            "index": 3
+          },
+          "title": "Sr. Manager, SEO and AEO",
+          "jobType": [
+            "Full-time"
+          ],
+          "descriptionHtml": "<div>The pay range for this role is $130,000 - $160,000/yr USD.<p></p><p><b>\nWHO WE ARE:</b></p><p>\nHeadquartered in Southern California, Skechers&mdash;the Comfort Technology Company&reg;&mdash;has spent over 30 years helping men, women, and kids everywhere look and feel good. Comfort innovation is at the core of everything we do, driving the development of stylish, high-quality products at a great value. From our diverse footwear collections to our expanding range of apparel and accessories, Skechers is a complete lifestyle brand.</p><p></p><p><b>\nABOUT THE ROLE:</b></p><p>\nSkechers Digital Ecommerce Group is seeking a talented Senior Manager of SEO and AEO to own and lead the organic search program as we continue to evolve our direct-to-consumer (DTC) business. This role owns the end-to-end organic roadmap - including technical SEO, content strategy, GEO/AEO innovation, and local store visibility &ndash; with direct impact on scalable customer acquisition and revenue growth.</p><p></p><p>\nThis leader will set the strategic vision for how Skechers shows up across traditional and AI-driven search surfaces, build and develop a high-performing SEO team, and serve as the internal authority on organic search across the organization. Partnering closely with Digital Ecommerce, Promotions, IT, Retail Merchandising, Creative/Brand, and Customer Care, this role embeds search-first thinking at every level of the digital roadmap while driving measurable business outcomes.</p><p></p><p><b>\nWHAT YOU&rsquo;LL DO:</b></p><ul><li><p>\nOwn and drive the holistic global SEO + GEO/AEO strategy, setting the multi-year organic roadmap, allocating resources, and making prioritization decisions in partnership with Digital leadership.</p></li><li><p>\nLead, develop, and grow a team of SEO professionals &mdash; setting clear goals, providing regular coaching, and building team capability across technical SEO and emerging AEO/GEO disciplines.</p></li><li><p>\nPartner closely with Digital Ecommerce, IT, Promotions, Retail Merchandising, and Creative/Brand to embed SEO and AEO requirements early into product, site, and campaign planning.</p></li><li><p>\nOwn organic performance reporting to senior leadership &mdash; defining KPIs, building measurement frameworks, and connecting organic performance to revenue, customer acquisition, and LTV outcomes.</p></li><li><p>\nServe as the internal authority on organic and AI-driven search, educating stakeholders, managing agencies and contractors, and translating industry shifts into clear roadmap recommendations</p></li><li><p>\nOwn local listings strategy and lead Skechers' approach to AI-driven search surfaces including LLMs, AI Overviews, and answer engines</p></li></ul><p></p><p><b>\nWHAT YOU&rsquo;LL BRING:</b></p><ul><li><p>\n8+ years of SEO experience with a proven track record of driving significant attributable organic growth through deep expertise in both technical and content strategies.</p></li><li><p>\nPeople leadership experience &mdash; demonstrated ability to build, manage, and develop an SEO team in a fast-moving, cross-functional environment.</p></li><li><p>\nAEO/GEO ownership &mdash; specific examples of building and executing AI search strategies, not just awareness of the landscape.</p></li><li><p>\nStrong platform proficiency &mdash; Google Search Console, Merchant Center, SEMrush, Botify (or equivalent enterprise crawling tools), and emerging AI search measurement platforms</p></li><li><p>\nAI proficiency &mdash; advanced prompt engineering, data handling, and the ability to select and deploy the right AI tools to drive team productivity and execution quality.</p></li><li><p>\nOperational excellence &mdash; proven ability to build scalable processes, workflows, and reporting systems across internal teams and agency partners.</p></li><li><p>\nStakeholder influence &mdash; track record of driving cross-functional alignment and roadmap prioritization without direct authority.</p></li></ul><p></p><p><b>\nREQUIREMENTS:</b></p><ul><li><p>\n8+ years of continuous SEO experience, with at least 4 years in a team management role.</p></li><li><p>\nDemonstrated experience owning an SEO program end-to-end at a DTC or e-commerce brand.</p></li><li><p>\nBachelor's degree or equivalent practical experience.</p></li><li><p>\nMust be able to work a hybrid schedule from our Manhattan Beach, CA headquarters.</p></li></ul><p></p><p>\n#LI-LA1</p><p></p><p><b>\nAbout Skechers</b></p><p>\nSkechers, a global Fortune 500&reg; company, develops and markets a diverse range of lifestyle and performance footwear, apparel, and accessories. Serving over 180 countries and territories, Skechers connects customers to products through department and specialty stores, e-commerce and digital stores, and through our more than 5,300 Skechers retail locations.</p><p><b><br>\nEqual Employment Opportunity</b><br>\nSkechers is committed to providing a safe, inclusive, and respectful work environment. Skechers provides equal employment opportunities for all employees and applicants for employment without regard race, color, religion, gender, gender identification and expression, national origin, marital status, age, disability, genetic information, military status, sexual orientation, or any other protected characteristic established by local, state or federal law.</p><p><b><br>\nReasonable Accommodation</b><br>\nApplicants for employment who require a reasonable accommodation to apply for a job should request appropriate accommodation by emailing benefits@skechers.com.<br>\nTo perform this job successfully, an individual must be able to perform each job responsibility satisfactorily. The skills, abilities and physical demands described are representative of those duties that must be met by an employee to successfully perform the essential functions of this job. Reasonable accommodation may be made to enable individuals with disabilities, who are otherwise qualified for the job position, to perform the essential functions.</p></div>",
+          "companyLogoUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_squarelogo/256x256/a0daef7c976e56f87f4c942a8c7ee7d9",
+          "descriptionText": "The pay range for this role is $130,000 - $160,000/yr USD.\n\nWHO WE ARE:\n\nHeadquartered in Southern California, Skechers—the Comfort Technology Company®—has spent over 30 years helping men, women, and kids everywhere look and feel good. Comfort innovation is at the core of everything we do, driving the development of stylish, high-quality products at a great value. From our diverse footwear collections to our expanding range of apparel and accessories, Skechers is a complete lifestyle brand.\n\nABOUT THE ROLE:\n\nSkechers Digital Ecommerce Group is seeking a talented Senior Manager of SEO and AEO to own and lead the organic search program as we continue to evolve our direct-to-consumer (DTC) business. This role owns the end-to-end organic roadmap - including technical SEO, content strategy, GEO/AEO innovation, and local store visibility – with direct impact on scalable customer acquisition and revenue growth.\n\nThis leader will set the strategic vision for how Skechers shows up across traditional and AI-driven search surfaces, build and develop a high-performing SEO team, and serve as the internal authority on organic search across the organization. Partnering closely with Digital Ecommerce, Promotions, IT, Retail Merchandising, Creative/Brand, and Customer Care, this role embeds search-first thinking at every level of the digital roadmap while driving measurable business outcomes.\n\nWHAT YOU’LL DO:\n\nOwn and drive the holistic global SEO + GEO/AEO strategy, setting the multi-year organic roadmap, allocating resources, and making prioritization decisions in partnership with Digital leadership.\n\nLead, develop, and grow a team of SEO professionals — setting clear goals, providing regular coaching, and building team capability across technical SEO and emerging AEO/GEO disciplines.\n\nPartner closely with Digital Ecommerce, IT, Promotions, Retail Merchandising, and Creative/Brand to embed SEO and AEO requirements early into product, site, and campaign planning.\n\nOwn organic performance reporting to senior leadership — defining KPIs, building measurement frameworks, and connecting organic performance to revenue, customer acquisition, and LTV outcomes.\n\nServe as the internal authority on organic and AI-driven search, educating stakeholders, managing agencies and contractors, and translating industry shifts into clear roadmap recommendations\n\nOwn local listings strategy and lead Skechers' approach to AI-driven search surfaces including LLMs, AI Overviews, and answer engines\n\nWHAT YOU’LL BRING:\n\n8+ years of SEO experience with a proven track record of driving significant attributable organic growth through deep expertise in both technical and content strategies.\n\nPeople leadership experience — demonstrated ability to build, manage, and develop an SEO team in a fast-moving, cross-functional environment.\n\nAEO/GEO ownership — specific examples of building and executing AI search strategies, not just awareness of the landscape.\n\nStrong platform proficiency — Google Search Console, Merchant Center, SEMrush, Botify (or equivalent enterprise crawling tools), and emerging AI search measurement platforms\n\nAI proficiency — advanced prompt engineering, data handling, and the ability to select and deploy the right AI tools to drive team productivity and execution quality.\n\nOperational excellence — proven ability to build scalable processes, workflows, and reporting systems across internal teams and agency partners.\n\nStakeholder influence — track record of driving cross-functional alignment and roadmap prioritization without direct authority.\n\nREQUIREMENTS:\n\n8+ years of continuous SEO experience, with at least 4 years in a team management role.\n\nDemonstrated experience owning an SEO program end-to-end at a DTC or e-commerce brand.\n\nBachelor's degree or equivalent practical experience.\n\nMust be able to work a hybrid schedule from our Manhattan Beach, CA headquarters.\n\n#LI-LA1\n\nAbout Skechers\n\nSkechers, a global Fortune 500® company, develops and markets a diverse range of lifestyle and performance footwear, apparel, and accessories. Serving over 180 countries and territories, Skechers connects customers to products through department and specialty stores, e-commerce and digital stores, and through our more than 5,300 Skechers retail locations.\n\nEqual Employment Opportunity\nSkechers is committed to providing a safe, inclusive, and respectful work environment. Skechers provides equal employment opportunities for all employees and applicants for employment without regard race, color, religion, gender, gender identification and expression, national origin, marital status, age, disability, genetic information, military status, sexual orientation, or any other protected characteristic established by local, state or federal law.\n\nReasonable Accommodation\nApplicants for employment who require a reasonable accommodation to apply for a job should request appropriate accommodation by emailing benefits@skechers.com.\nTo perform this job successfully, an individual must be able to perform each job responsibility satisfactorily. The skills, abilities and physical demands described are representative of those duties that must be met by an employee to successfully perform the essential functions of this job. Reasonable accommodation may be made to enable individuals with disabilities, who are otherwise qualified for the job position, to perform the essential functions.",
+          "companyName": "Skechers",
+          "companyUrl": "https://www.indeed.com/cmp/Skechers",
+          "companyHeaderUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_headerimage/1960x400/cb3255f55a2f1160548c568d038cf3f5",
+          "location": {
+            "city": "Manhattan Beach",
+            "postalCode": "90266",
+            "country": "United States",
+            "countryCode": "US",
+            "formattedAddressLong": "Manhattan Beach, CA 90266",
+            "formattedAddressShort": "Manhattan Beach, CA",
+            "latitude": 33.87829,
+            "longitude": -118.39653,
+            "streetAddress": "225 South Sepulveda Boulevard",
+            "fullAddress": "225 South Sepulveda Boulevard, Manhattan Beach, CA 90266"
+          },
+          "salary": {
+            "salaryCurrency": "USD",
+            "salaryMax": 160000,
+            "salaryMin": 130000,
+            "salarySource": "EXTRACTION",
+            "salaryText": "$130,000 - $160,000 a year",
+            "salaryType": "yearly"
+          },
+          "rating": {
+            "rating": 3.5,
+            "count": 3464
+          },
+          "benefits": [],
+          "occupation": [
+            "Digital Marketing Occupations",
+            "Search Marketing Occupations",
+            "Search Engine Optimization Specialists",
+            "Marketing, Advertising & Public Relations Occupations",
+            "Marketing & Advertising Occupations"
+          ],
+          "attributes": [
+            "Roadmap creation (System development task)",
+            "Revenue growth",
+            "Web analytics reporting",
+            "SEO traffic analysis reports",
+            "Strategic management",
+            "Program management",
+            "Contractor management",
+            "Product roadmapping",
+            "Operational management",
+            "Coaching",
+            "Full-time",
+            "Office",
+            "E-commerce",
+            "Managing search marketing teams",
+            "Prompt engineering",
+            "8 years",
+            "Team development",
+            "Key Performance Indicators",
+            "Bachelor's degree",
+            "New customer acquisition",
+            "Leading team collaboration initiatives",
+            "Hybrid work",
+            "Experience equivalent to degree accepted",
+            "Management reporting",
+            "Google Search Console",
+            "Operational excellence initiatives",
+            "AI-driven automation",
+            "Senior level",
+            "AI strategy",
+            "Cross-functional team management",
+            "Leadership",
+            "Content strategy alignment",
+            "Project stakeholder communication",
+            "SEO content performance reports",
+            "Stakeholder relationship building",
+            "Cross-functional communication",
+            "Senior leadership",
+            "Stakeholder management"
+          ],
+          "contacts": [],
+          "shifts": [],
+          "socialInsurance": [],
+          "workingSystem": [],
+          "shiftAndSchedule": [],
+          "postedToday": false,
+          "hiringDemand": {
+            "isHighVolumeHiring": false,
+            "isUrgentHire": false
+          },
+          "datePublished": "2026-05-30",
+          "expired": false,
+          "source": "Skechers",
+          "age": "8 days ago",
+          "isRemote": false,
+          "locale": "us",
+          "language": "en",
+          "jobUrl": "https://www.indeed.com/viewjob?jk=7193db2e19c78d6c",
+          "applyUrl": "https://skechers.wd5.myworkdayjobs.com/One-career-site/job/Manhattan-Beach-CA/Manager--SEO-and-AEO_JR127013",
+          "emails": [
+            "benefits@skechers.com"
+          ],
+          "companyIndustry": "RETAIL",
+          "companyAddresses": [
+            "228 S Sepulveda Blvd\r\nManhattan Beach, California 90266\r\n\r\n"
+          ],
+          "companyNumEmployees": "10,000+",
+          "companyRevenue": "Decline to state",
+          "companyDescription": "Skechers is a Fortune 500® company — a growth-oriented brand that designs, develops, and markets a diverse product portfolio of lifestyle and performance footwear, apparel and accessories for men, women and children around the globe.",
+          "companyFounded": {
+            "year": 1992
+          },
+          "companyBriefDescription": "Skechers is focused on designing products that deliver style, comfort, innovation, and quality at a reasonable price.",
+          "companyLinks": {
+            "facebook": "https://www.facebook.com/Skechers",
+            "instagram": "https://www.instagram.com/skechers",
+            "twitter": "https://twitter.com/Skechersusa",
+            "customLinks": [
+              {
+                "name": "LinkedIn",
+                "url": "https://www.linkedin.com/company/skechers"
+              }
+            ],
+            "corporateWebsite": "https://www.skechers.com"
+          },
+          "companyCeo": {
+            "name": "Robert Greenberg – CEO, Founder",
+            "photoUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_ceophoto/512x512/ad29aac2746990ea8c1c5946d1539554",
+            "startDate": null
+          },
+          "requirements": []
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "jobKey": "b5c44ba0957c60e9",
+          "scrapingInfo": {
+            "page": 1,
+            "index": 2
+          },
+          "title": "SEO Specialist",
+          "jobType": [],
+          "descriptionHtml": "<div></div><div><div><div><div><div><b>Must Have Technical/Functional Skills</b>\n</div><div><ul><li>Experience with local SEO or multi-location businesses</li>\n<li>SEO with strong focus on on page and technical optimization</li>\n<li>Structured data and schema markup</li>\n<li>Site architecture, indexing, and crawlability concepts</li>\n<li>Entity based SEO and taxonomy translation</li>\n<li>Metadata optimization and internal linking</li>\n<li>Search performance analysis and diagnostics</li>\n<li>Understanding of how structured content and attributes support AEO and GEO across AI-driven search environments</li></ul><br>\n</div>\n<div></div><br>\n<div><b>Roles &amp; Responsibilities</b>\n</div><div><ul><li>Translate defined taxonomy and content frameworks into structured, search aligned implementations</li>\n<li>Align metadata, page structure, and on page elements with user intent and search behavior</li>\n<li>Define and validate structured data requirements including schema markups and entity relationships</li>\n<li>Ensure consistency between content intent and how information is exposed to search engines and AI systems</li>\n<li>Identify and resolve gaps in discoverability, indexing, and machine readability</li>\n<li>Optimize titles, headings, metadata, and internal linking structures</li>\n<li>Support off-site backlink strategies by ensuring technical health and site integrity for authority growth</li>\n<li>Develop user stories to inform technical implementation of recommendations</li>\n<li>Collaborate closely with internal marketing team and web development partners</li>\n<li>Monitor performance (ranking, position, keywords) across search and AI systems and map back to visibility</li>\n</ul></div><div><div>Salary Range-$100,000-$120,000 a year</div><br>\n<div><br>\n</div><div>#LI-KR3</div><div><br>\n</div>\n<div></div><br>\n<div>TCS Employee Benefits Summary:\n</div><div>Discretionary Annual Incentive.\n</div><div>Comprehensive Medical Coverage: Medical &amp; Health, Dental &amp; Vision, Disability Planning &amp; Insurance, Pet Insurance Plans.\n</div><div>Family Support: Maternal &amp; Parental Leaves.\n</div><div>Insurance Options: Auto &amp; Home Insurance, Identity Theft Protection.\n</div><div>Convenience &amp; Professional Growth: Commuter Benefits &amp; Certification &amp; Training Reimbursement.\n</div><div>Time Off: Vacation, Time Off, Sick Leave &amp; Holidays.\n</div><div>Legal &amp; Financial Assistance: Legal Assistance, 401K Plan, Performance Bonus, College Fund, Student Loan Refinancing.\n</div></div></div></div></div><div><div><div><b>Location</b></div>\n<div>Parsippany, NJ</div>\n</div><div><div><b>Job Function</b></div>\n<div>TECHNOLOGY</div>\n</div><div><div><b>Role</b></div>\n<div>Analyst</div>\n</div><div><div><b>Job Id</b></div>\n<div>408907</div>\n</div><div><div><b>Desired Skills</b></div>\n<div>SEO</div>\n</div><div><div><b>Salary Range</b></div>\n<div>$100,000-$120,000 a year</div></div></div></div><div></div>",
+          "companyLogoUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_squarelogo/256x256/bfd57a052c0dfad03779c68c62499ce4",
+          "descriptionText": "Must Have Technical/Functional Skills\nExperience with local SEO or multi-location businesses\nSEO with strong focus on on page and technical optimization\nStructured data and schema markup\nSite architecture, indexing, and crawlability concepts\nEntity based SEO and taxonomy translation\nMetadata optimization and internal linking\nSearch performance analysis and diagnostics\nUnderstanding of how structured content and attributes support AEO and GEO across AI-driven search environments\n\nRoles & Responsibilities\nTranslate defined taxonomy and content frameworks into structured, search aligned implementations\nAlign metadata, page structure, and on page elements with user intent and search behavior\nDefine and validate structured data requirements including schema markups and entity relationships\nEnsure consistency between content intent and how information is exposed to search engines and AI systems\nIdentify and resolve gaps in discoverability, indexing, and machine readability\nOptimize titles, headings, metadata, and internal linking structures\nSupport off-site backlink strategies by ensuring technical health and site integrity for authority growth\nDevelop user stories to inform technical implementation of recommendations\nCollaborate closely with internal marketing team and web development partners\nMonitor performance (ranking, position, keywords) across search and AI systems and map back to visibility\nSalary Range-$100,000-$120,000 a year\n\n#LI-KR3\n\nTCS Employee Benefits Summary:\nDiscretionary Annual Incentive.\nComprehensive Medical Coverage: Medical & Health, Dental & Vision, Disability Planning & Insurance, Pet Insurance Plans.\nFamily Support: Maternal & Parental Leaves.\nInsurance Options: Auto & Home Insurance, Identity Theft Protection.\nConvenience & Professional Growth: Commuter Benefits & Certification & Training Reimbursement.\nTime Off: Vacation, Time Off, Sick Leave & Holidays.\nLegal & Financial Assistance: Legal Assistance, 401K Plan, Performance Bonus, College Fund, Student Loan Refinancing.\nLocation\nParsippany, NJ\nJob Function\nTECHNOLOGY\nRole\nAnalyst\nJob Id\n408907\nDesired Skills\nSEO\nSalary Range\n$100,000-$120,000 a year",
+          "companyName": "Tata Consultancy Services (TCS)",
+          "companyUrl": "https://www.indeed.com/cmp/Tata-Consultancy-Services-(tcs)",
+          "companyHeaderUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_headerimage/1960x400/de488d02cc7415976976a494505928c7",
+          "location": {
+            "city": "Parsippany-Troy Hills",
+            "postalCode": null,
+            "country": "United States",
+            "countryCode": "US",
+            "formattedAddressLong": "Parsippany-Troy Hills, NJ",
+            "formattedAddressShort": "Parsippany-Troy Hills, NJ",
+            "latitude": 40.85788,
+            "longitude": -74.42599,
+            "streetAddress": null,
+            "fullAddress": "Parsippany-Troy Hills, NJ"
+          },
+          "salary": {
+            "salaryCurrency": "USD",
+            "salaryMax": 120000,
+            "salaryMin": 100000,
+            "salarySource": "EXTRACTION",
+            "salaryText": "$100,000 - $120,000 a year",
+            "salaryType": "yearly"
+          },
+          "rating": {
+            "rating": 3.9,
+            "count": 23598
+          },
+          "benefits": [
+            "Commuter assistance",
+            "Health insurance",
+            "Dental insurance",
+            "Vision insurance",
+            "Pet insurance"
+          ],
+          "occupation": [
+            "Digital Marketing Occupations",
+            "Search Marketing Occupations",
+            "Search Engine Optimization Specialists",
+            "Marketing, Advertising & Public Relations Occupations",
+            "Marketing & Advertising Occupations"
+          ],
+          "attributes": [
+            "Commuter assistance",
+            "Requirements specification",
+            "Performance bonus",
+            "Requirements design",
+            "Gap analysis",
+            "SEO error detection and correction",
+            "Mid-level",
+            "Schema design",
+            "Health insurance",
+            "Dental insurance",
+            "Analysis skills",
+            "Requirements analysis",
+            "Metadata tagging",
+            "Vision insurance",
+            "Website analysis",
+            "Digital marketing performance monitoring",
+            "Content architecture",
+            "Information architecture",
+            "Metadata management",
+            "Metadata creation",
+            "Pet insurance"
+          ],
+          "contacts": [],
+          "shifts": [],
+          "socialInsurance": [
+            "Health insurance"
+          ],
+          "workingSystem": [],
+          "shiftAndSchedule": [],
+          "postedToday": false,
+          "hiringDemand": {
+            "isHighVolumeHiring": false,
+            "isUrgentHire": false
+          },
+          "datePublished": "2026-04-29",
+          "expired": false,
+          "source": "Tata Consultancy Services",
+          "age": "a month ago",
+          "isRemote": false,
+          "locale": "us",
+          "language": "en",
+          "jobUrl": "https://www.indeed.com/viewjob?jk=b5c44ba0957c60e9",
+          "applyUrl": "https://ibegin.tcsapps.com/candidate/jobs/shared-job/NDA4OTA3Sg==",
+          "emails": [],
+          "companyIndustry": "CONSULTING_AND_BUSINESS_SERVICES",
+          "companyAddresses": [
+            "Tour Initiale - 1 Terasse Bellini, 92800 Puteaux"
+          ],
+          "companyNumEmployees": "10,000+",
+          "companyRevenue": "more than $10B (USD)",
+          "companyDescription": "Tata Consultancy Services is an IT services, consulting and business solutions organization that delivers real results to global business, ensuring a level of certainty no other firm can match. TCS offers a consulting-led, integrated portfolio of IT, BPS,infrastructure, engineering and assurance services. This is delivered through its unique Global Network Delivery Model™, recognized as the benchmark of excellence in software development. A part of the Tata group, India’s largest industrial conglomerate, TCS has over 362,000 of the world’s best-trained consultants in 45 countries. The company generated consolidated revenues of US $16.5 billion for year ended March 31, 2016 and is listed on the BSE Limited and National Stock Exchange of India Limited. For more information, visit us at www.tcs.com.",
+          "companyFounded": {
+            "year": 1968
+          },
+          "companyBriefDescription": "Tata Consultancy Services is an IT services, consulting and business solutions organization that delivers real results to global business.",
+          "companyLinks": {
+            "facebook": "https://www.facebook.com/TataConsultancyServices",
+            "instagram": "https://www.instagram.com/tcsglobal",
+            "twitter": "https://twitter.com/TCS",
+            "customLinks": [],
+            "corporateWebsite": "https://www.tcs.com/fr-fr"
+          },
+          "companyCeo": {
+            "name": "K. Krithivasan",
+            "photoUrl": null,
+            "startDate": null
+          },
+          "requirements": []
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "jobKey": "7ee0c61353f98464",
+          "scrapingInfo": {
+            "page": 1,
+            "index": 9
+          },
+          "title": "Content Manager, Digital Experience",
+          "jobType": [
+            "Full-time"
+          ],
+          "descriptionHtml": "<div><b>What to Expect</b><div><p>\nWe are looking for a talented, passionate Content Manager to join our growing Digital Content team based in Fremont. The successful candidate will be responsible for collaborating with multiple stakeholders to write, optimize, publish and manage high-quality content across our global website, ensuring that visitors to our site have a seamless and positive user experience.</p></div><b><br>\nWhat You'll Do</b><div><ul><li>\nProactively collaborate with multiple stakeholders to produce content and take ownership for quality and accuracy on tesla.com</li><li>\nWrite and edit content to ensure online content supports search engine optimization (SEO) goals, our brand standards, web style guidelines and legal and compliance requirements</li><li>\nConduct simple keyword research and use SEO guidelines in writing</li><li>\nTrack and manage multiple projects while meeting tight deadlines</li><li>\nParticipate in the full web production lifecycle, including scoping out content requirements, production, testing and ongoing management</li><li>\nSupport localization of global web content</li><li>\nIncorporate learnings from analytics data into the development of content</li><li>\nOptimize metadata and on-page content based on priority</li><li>\nManage content daily in the content management system (CMS)</li></ul></div><br>\n<b>\nWhat You'll Bring</b><div><ul><li>\n1-3 years experience in copywriting for user-facing content and search engine optimization (SEO)</li><li>\nUnderstanding of content optimization and keyword research</li><li>\nExperience in writing for a global audience</li><li>\nSuperior proofreading and copywriting skills</li><li>\nEye for detail, even under pressure</li><li>\nAbility to work in a fast-paced environment and go above and beyond to meet deadlines</li><li>\nExperience in using a content management system (CMS)</li></ul></div><br>\n<b>\nCompensation and Benefits</b><div>\nBenefits</div><div><p>\nAlong with competitive pay, as a full-time Tesla employee, you are eligible for the following benefits at day 1 of hire:</p>\n<ul><li>Medical plans &gt; plan options with $0 payroll deduction</li>\n<li>Family-building, fertility, adoption and surrogacy benefits</li>\n<li>Dental (including orthodontic coverage) and vision plans, both have options with a $0 paycheck contribution</li>\n<li>Company Paid (Health Savings Accounts) HSA Contribution when enrolled in the High-Deductible medical plan with HSA</li>\n<li>Healthcare and Dependent Care Flexible Spending Accounts (FSA)</li>\n<li>401(k) with employer match, Employee Stock Purchase Plans, and other financial benefits</li>\n<li>Company paid Basic Life, AD&amp;D</li><li>\nShort-term and long-term disability insurance (90 day waiting period)</li>\n<li>Employee Assistance Program</li>\n<li>Sick and Vacation time (Flex time for salary positions, Accrued hours for Hourly positions), and Paid Holidays</li>\n<li>Back-up childcare and parenting support resources</li>\n<li>Voluntary benefits to include: critical illness, hospital indemnity, accident insurance, theft &amp; legal services, and pet insurance</li>\n<li>Weight Loss and Tobacco Cessation Programs</li>\n<li>Tesla Babies program</li>\n<li>Commuter benefits</li>\n<li>Employee discounts and perks program</li>\n</ul></div><div>Expected Compensation</div><div>\n$64,000 - $156,000/annual salary + cash and stock awards + benefits<p>\nPay offered may vary depending on multiple individualized factors, including market location, job-related knowledge, skills, and experience. The total compensation package for this position may also include other elements dependent on the position offered. Details of participation in these benefit plans will be provided if an employee receives an offer of employment.</p></div><br>\nTesla is an Equal Opportunity / Affirmative Action employer committed to diversity in the workplace. All qualified applicants will receive consideration for employment without regard to race, color, religion, sex, sexual orientation, age, national origin, disability, protected veteran status, gender identity or any other factor protected by applicable federal, state or local laws.<br>\n<br>\nTesla is also committed to working with and providing reasonable accommodations to individuals with disabilities. Please let your recruiter know if you need an accommodation at any point during the interview process.</div>",
+          "companyLogoUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_squarelogo/256x256/5e42be6c7dd264b60310b59afb8a3c48",
+          "descriptionText": "What to Expect\n\nWe are looking for a talented, passionate Content Manager to join our growing Digital Content team based in Fremont. The successful candidate will be responsible for collaborating with multiple stakeholders to write, optimize, publish and manage high-quality content across our global website, ensuring that visitors to our site have a seamless and positive user experience.\n\nWhat You'll Do\nProactively collaborate with multiple stakeholders to produce content and take ownership for quality and accuracy on tesla.com\nWrite and edit content to ensure online content supports search engine optimization (SEO) goals, our brand standards, web style guidelines and legal and compliance requirements\nConduct simple keyword research and use SEO guidelines in writing\nTrack and manage multiple projects while meeting tight deadlines\nParticipate in the full web production lifecycle, including scoping out content requirements, production, testing and ongoing management\nSupport localization of global web content\nIncorporate learnings from analytics data into the development of content\nOptimize metadata and on-page content based on priority\nManage content daily in the content management system (CMS)\n\nWhat You'll Bring\n1-3 years experience in copywriting for user-facing content and search engine optimization (SEO)\nUnderstanding of content optimization and keyword research\nExperience in writing for a global audience\nSuperior proofreading and copywriting skills\nEye for detail, even under pressure\nAbility to work in a fast-paced environment and go above and beyond to meet deadlines\nExperience in using a content management system (CMS)\n\nCompensation and Benefits\nBenefits\n\nAlong with competitive pay, as a full-time Tesla employee, you are eligible for the following benefits at day 1 of hire:\n\nMedical plans > plan options with $0 payroll deduction\nFamily-building, fertility, adoption and surrogacy benefits\nDental (including orthodontic coverage) and vision plans, both have options with a $0 paycheck contribution\nCompany Paid (Health Savings Accounts) HSA Contribution when enrolled in the High-Deductible medical plan with HSA\nHealthcare and Dependent Care Flexible Spending Accounts (FSA)\n401(k) with employer match, Employee Stock Purchase Plans, and other financial benefits\nCompany paid Basic Life, AD&D\nShort-term and long-term disability insurance (90 day waiting period)\nEmployee Assistance Program\nSick and Vacation time (Flex time for salary positions, Accrued hours for Hourly positions), and Paid Holidays\nBack-up childcare and parenting support resources\nVoluntary benefits to include: critical illness, hospital indemnity, accident insurance, theft & legal services, and pet insurance\nWeight Loss and Tobacco Cessation Programs\nTesla Babies program\nCommuter benefits\nEmployee discounts and perks program\nExpected Compensation\n$64,000 - $156,000/annual salary + cash and stock awards + benefits\n\nPay offered may vary depending on multiple individualized factors, including market location, job-related knowledge, skills, and experience. The total compensation package for this position may also include other elements dependent on the position offered. Details of participation in these benefit plans will be provided if an employee receives an offer of employment.\n\nTesla is an Equal Opportunity / Affirmative Action employer committed to diversity in the workplace. All qualified applicants will receive consideration for employment without regard to race, color, religion, sex, sexual orientation, age, national origin, disability, protected veteran status, gender identity or any other factor protected by applicable federal, state or local laws.\n\nTesla is also committed to working with and providing reasonable accommodations to individuals with disabilities. Please let your recruiter know if you need an accommodation at any point during the interview process.",
+          "companyName": "Tesla",
+          "companyUrl": "https://www.indeed.com/cmp/Tesla",
+          "companyHeaderUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_headerimage/1960x400/0dd52e4838b7fbaad47cb480680a00d3",
+          "location": {
+            "city": "Fremont",
+            "postalCode": "94538",
+            "country": "United States",
+            "countryCode": "US",
+            "formattedAddressLong": "Fremont, CA 94538",
+            "formattedAddressShort": "Fremont, CA",
+            "latitude": 37.526833,
+            "longitude": -121.96564,
+            "streetAddress": null,
+            "fullAddress": "Fremont, CA 94538"
+          },
+          "salary": {
+            "salaryCurrency": "USD",
+            "salaryMax": 156000,
+            "salaryMin": 64000,
+            "salarySource": "EXTRACTION",
+            "salaryText": "$64,000 - $156,000 a year",
+            "salaryType": "yearly"
+          },
+          "rating": {
+            "rating": 3.3,
+            "count": 8351
+          },
+          "benefits": [
+            "Commuter assistance",
+            "Health savings account",
+            "AD&D insurance",
+            "Paid holidays",
+            "Disability insurance",
+            "Health insurance",
+            "Dental insurance",
+            "Flexible spending account",
+            "Flextime",
+            "Adoption assistance",
+            "Employee assistance program",
+            "401(k) matching",
+            "Employee discount",
+            "Benefits from day one",
+            "Pet insurance"
+          ],
+          "occupation": [
+            "Digital Marketing Occupations",
+            "Content Marketing Occupations",
+            "Marketing, Advertising & Public Relations Occupations",
+            "Marketing & Advertising Occupations"
+          ],
+          "attributes": [
+            "Website management",
+            "Content localization",
+            "Commuter assistance",
+            "Health savings account",
+            "Hourly pay",
+            "AD&D insurance",
+            "Content management systems",
+            "Branding consistency",
+            "Paid holidays",
+            "Full-time",
+            "Disability insurance",
+            "Yearly pay",
+            "Mid-level",
+            "Office",
+            "Health insurance",
+            "Dental insurance",
+            "Flexible spending account",
+            "Flextime",
+            "Adoption assistance",
+            "Content performance analytics",
+            "Employee assistance program",
+            "Data-driven content",
+            "401(k) matching",
+            "In-person",
+            "Employee discount",
+            "1 year",
+            "Benefits from day one",
+            "Achieving project delivery timelines",
+            "Editorial guidelines",
+            "SEO content writing",
+            "Web writing",
+            "Websites",
+            "Analytics",
+            "Metadata creation",
+            "Pet insurance",
+            "Content publishing"
+          ],
+          "contacts": [],
+          "shifts": [],
+          "socialInsurance": [
+            "Health insurance"
+          ],
+          "workingSystem": [
+            "Flextime"
+          ],
+          "shiftAndSchedule": [
+            "Flextime"
+          ],
+          "postedToday": false,
+          "hiringDemand": {
+            "isHighVolumeHiring": false,
+            "isUrgentHire": false
+          },
+          "datePublished": "2026-05-04",
+          "expired": false,
+          "source": "Tesla",
+          "age": "a month ago",
+          "isRemote": false,
+          "locale": "us",
+          "language": "en",
+          "jobUrl": "https://www.indeed.com/viewjob?jk=7ee0c61353f98464",
+          "applyUrl": "https://www.tesla.com/careers/search/job/269769?source=Indeed",
+          "emails": [],
+          "companyIndustry": "INDUSTRIAL_MANUFACTURING",
+          "companyAddresses": [
+            "1 Tesla Road Austin, TX 78725"
+          ],
+          "companyNumEmployees": "10,000+",
+          "companyRevenue": "$5B to $10B (USD)",
+          "companyDescription": "Tesla is accelerating the world’s transition to sustainable energy. We design, manufacture, sell, install and service the world’s best solar technology, energy storage systems, and electric vehicles, providing customers the opportunity to generate, store and consume energy entirely sustainably.\r\n \r\nTesla is committed to hiring and developing top talent from around the world for any given discipline. Based in California, Tesla’s workforce spans across four continents. We work to build an inclusive environment in which all people, regardless of gender, race, religion, or background, can come to do their best work. \r\n \r\nOur world-class teams operate with a non-conventional philosophy of inter-disciplinary collaboration. Each member of the team is expected to challenge and to be challenged, to create, and to innovate. We’re tackling the world’s most difficult and important problems—and we wouldn’t succeed without our shared passion for making the world a better place.\r\n",
+          "companyFounded": {
+            "year": 2003
+          },
+          "companyBriefDescription": "Tesla is accelerating the world’s transition to sustainable energy.",
+          "companyLinks": {
+            "facebook": "https://www.facebook.com/TeslaMotorsCorp/",
+            "instagram": null,
+            "twitter": "https://twitter.com/tesla",
+            "customLinks": [
+              {
+                "name": "Careers Page",
+                "url": "https://www.tesla.com/careers"
+              }
+            ],
+            "corporateWebsite": "https://www.tesla.com"
+          },
+          "companyCeo": {
+            "name": "Elon Musk",
+            "photoUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_ceophoto/512x512/0fc450600a0b471e811e0d08de5cbe98",
+            "startDate": null
+          },
+          "requirements": []
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "jobKey": "e4674e5f2e7faf30",
+          "scrapingInfo": {
+            "page": 1,
+            "index": 1
+          },
+          "title": "Senior Product Manager (SEO/Web) - User Growth (San Jose)",
+          "jobType": [],
+          "descriptionHtml": "Product manager\n<br><br>\nSenior Product Manager (SEO/Web) - User Growth (San Jose)\n<br><br>\nLocation\n<br>:\n<br><br>\nSan Jose\n<br><br>\nEmployment Type\n<br>:\n<br><br>\nRegular\n<br><br>\nJob Code\n<br>:\n<br><br>\nA14329A\n<br><br>\nResponsibilities\n<br><br>\n<b>Team Introduction:</b><br>\nThe User Growth (UG) team is responsible for the growth of ByteDance's international products, including TikTok. We help develop customized growth strategies for the products and utilize various marketing, product, and data analysis techniques to achieve business growth goals. The UG team maintains and optimizes a range of mature product growth strategies, such as paid advertising and organic user acquisition, and skillfully applies them to various businesses to drive growth. Additionally, when new growth opportunities are identified, we create new solutions to help businesses achieve breakthroughs. By joining the UG team, you will be responsible for the growth of products with billions of users and gain hands-on experience in cutting-edge growth practices.\n<br><br>\n<b>Responsibilities:</b><br>\n<ul>\n<li>Own iteration and international growth strategy for the TikTok Web product, using organic search (SEO) as a primary growth channel. Scope includes page experience and design, information architecture, content distribution, KPI frameworks, and experimentation platforms for the full Web product lifecycle.</li>\n<li>Partner directly with external search engine companies and other search-engine teams to validate advanced search strategies and technical guidance, and rapidly translate those findings into actionable product and engineering plans.</li>\n<li>Design and implement end-to-end SEO programs — including standardized information architecture, structured data, traffic acquisition tactics, and client-side conversion funnels — and coordinate with Web and App product and engineering teams to operationalize them.</li>\n<li>Lead full lifecycle product delivery from business analysis and roadmapping through solution design, requirement decomposition, development coordination, launch validation and continuous iteration. Mobilize cross-functional stakeholders (product, engineering, data, content and operations) to ensure timely, high-quality execution.</li>\n<li>Localize and scale growth strategies for global markets: adapt information architecture, metadata, and distribution pathways to regional, linguistic and cultural differences while ensuring scalability, sustainability and regulatory compliance across multiple countries and languages.</li>\n</ul>\nQualifications\n<br><br>\nMinimum Qualifications\n<br><ul>\n<li>3+ years of product experience in internet or digital businesses (or equivalent career progression), with hands-on exposure to Web products, content distribution or user-growth initiatives.</li>\n<li>End-to-end product mindset that connects business objectives to technical implementation. Able to deliver tightly-coupled solutions across page design, information architecture and engineering; treats SEO as a product lever within a broader product ecosystem.</li>\n<li>Proven experience working directly with large third-party platforms or technical teams to align on requirements and integrate external rules or new technologies into product roadmaps.</li>\n</ul>\n<b>Preferred Qualifications:</b><br>\n<ul>\n<li>Demonstrated ability to craft deep, multi-dimensional strategies in complex business contexts with a focus on long-term value and systematic growth; experience or strong motivation for cross-border and cross-cultural product rollout.</li>\n<li>Excellent cross-team collaboration and project management skills, strong logical thinking and communication skills will be preferred.</li>\n<li>Prior involvement in SEO/search/recommendation projects is a strong plus.</li>\n</ul>\nJob Information\n<br><br>\n【For Pay Transparency】Compensation Description (Annually)\n<br><br>\nThe base salary range for this position in the selected city is $151200 - $311600 annually.\n<br><br>\n​\n<br><br>\nCompensation may vary outside of this range depending on a number of factors, including a candidate’s qualifications, skills, competencies and experience, and location. Base pay is one part of the Total Package that is provided to compensate and recognize employees for their work, and this role may be eligible for additional discretionary bonuses/incentives, and restricted stock units.\n<br><br>\n​\n<br><br>\nBenefits may vary depending on the nature of employment and the country work location. Employees have day one access to medical, dental, and vision insurance, a 401(k) savings plan with company match, paid parental leave, short-term and long-term disability coverage, life insurance, wellbeing benefits, among others. Employees also receive 10 paid holidays per year, 10 paid sick days per year and 17 days of Paid Personal Time (prorated upon hire with increasing accruals by tenure).\n<br><br>\n​\n<br><br>\nThe Company reserves the right to modify or change these benefits programs at any time, with or without notice.\n<br><br>\n​\n<br><br>\n<b>For Los Angeles County (unincorporated) Candidates:</b><br>\n​\n<br><br>\nQualified applicants with arrest or conviction records will be considered for employment in accordance with all federal, state, and local laws including the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Our company believes that criminal history may have a direct, adverse and negative relationship on the following job duties, potentially resulting in the withdrawal of the conditional offer of employment:\n<br><br>\n​\n<br><br>\n1. Interacting and occasionally having unsupervised contact with internal/external clients and/or colleagues;\n<br><br>\n​\n<br><br>\n2. Appropriately handling and managing confidential information including proprietary and trade secret information and access to information technology systems; and\n<br><br>\n​\n<br><br>\n3. Exercising sound judgment.\n<br><br>\n​\n<br><br>\nAbout TikTok\n<br><br>\nTikTok is the leading destination for short-form mobile video. At TikTok, our mission is to inspire creativity and bring joy. TikTok's global headquarters are in Los Angeles and Singapore, and we also have offices in New York City, London, Dublin, Paris, Berlin, Dubai, Jakarta, Seoul, and Tokyo.\n<br><br>\n​\n<br><br>\nWhy Join Us\n<br><br>\nInspiring creativity is at the core of TikTok's mission. Our innovative product is built to help people authentically express themselves, discover and connect – and our global, diverse teams make that possible. Together, we create value for our communities, inspire creativity and bring joy - a mission we work towards every day.\n<br><br>\n​\n<br><br>\nWe strive to do great things with great people. We lead with curiosity, humility, and a desire to make impact in a rapidly growing tech company. Every challenge is an opportunity to learn and innovate as one team. We're resilient and embrace challenges as they come. By constantly iterating and fostering an \"Always Day 1\" mindset, we achieve meaningful breakthroughs for ourselves, our company, and our users. When we create and grow together, the possibilities are limitless. Join us.\n<br><br>\n​\n<br><br>\n​\n<br><br>\nDiversity & Inclusion\n<br><br>\n​\n<br><br>\nTikTok is committed to creating an inclusive space where employees are valued for their skills, experiences, and unique perspectives. Our platform connects people from across the globe and so does our workplace. At TikTok, our mission is to inspire creativity and bring joy. To achieve that goal, we are committed to celebrating our diverse voices and to creating an environment that reflects the many communities we reach. We are passionate about this and hope you are too.\n<br><br>\n​\n<br><br>\nTikTok Accommodation\n<br><br>\nTikTok is committed to providing reasonable accommodations in our recruitment processes for candidates with disabilities, pregnancy, sincerely held religious beliefs or other reasons protected by applicable laws. If you need assistance or a reasonable accommodation, please reach out to us at\n<br><br>\nhttps://tinyurl.com/RA-request",
+          "companyLogoUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_squarelogo/256x256/83b6323a8116bb3e0e44be12781095c5",
+          "descriptionText": "Product manager\n\nSenior Product Manager (SEO/Web) - User Growth (San Jose)\n\nLocation\n:\n\nSan Jose\n\nEmployment Type\n:\n\nRegular\n\nJob Code\n:\n\nA14329A\n\nResponsibilities\n\nTeam Introduction:\nThe User Growth (UG) team is responsible for the growth of ByteDance's international products, including TikTok. We help develop customized growth strategies for the products and utilize various marketing, product, and data analysis techniques to achieve business growth goals. The UG team maintains and optimizes a range of mature product growth strategies, such as paid advertising and organic user acquisition, and skillfully applies them to various businesses to drive growth. Additionally, when new growth opportunities are identified, we create new solutions to help businesses achieve breakthroughs. By joining the UG team, you will be responsible for the growth of products with billions of users and gain hands-on experience in cutting-edge growth practices.\n\nResponsibilities:\n- Own iteration and international growth strategy for the TikTok Web product, using organic search (SEO) as a primary growth channel. Scope includes page experience and design, information architecture, content distribution, KPI frameworks, and experimentation platforms for the full Web product lifecycle.\n- Partner directly with external search engine companies and other search-engine teams to validate advanced search strategies and technical guidance, and rapidly translate those findings into actionable product and engineering plans.\n- Design and implement end-to-end SEO programs — including standardized information architecture, structured data, traffic acquisition tactics, and client-side conversion funnels — and coordinate with Web and App product and engineering teams to operationalize them.\n- Lead full lifecycle product delivery from business analysis and roadmapping through solution design, requirement decomposition, development coordination, launch validation and continuous iteration. Mobilize cross-functional stakeholders (product, engineering, data, content and operations) to ensure timely, high-quality execution.\n- Localize and scale growth strategies for global markets: adapt information architecture, metadata, and distribution pathways to regional, linguistic and cultural differences while ensuring scalability, sustainability and regulatory compliance across multiple countries and languages.\n\nQualifications\n\nMinimum Qualifications\n- 3+ years of product experience in internet or digital businesses (or equivalent career progression), with hands-on exposure to Web products, content distribution or user-growth initiatives.\n- End-to-end product mindset that connects business objectives to technical implementation. Able to deliver tightly-coupled solutions across page design, information architecture and engineering; treats SEO as a product lever within a broader product ecosystem.\n- Proven experience working directly with large third-party platforms or technical teams to align on requirements and integrate external rules or new technologies into product roadmaps.\n\nPreferred Qualifications:\n- Demonstrated ability to craft deep, multi-dimensional strategies in complex business contexts with a focus on long-term value and systematic growth; experience or strong motivation for cross-border and cross-cultural product rollout.\n- Excellent cross-team collaboration and project management skills, strong logical thinking and communication skills will be preferred.\n- Prior involvement in SEO/search/recommendation projects is a strong plus.\n\nJob Information\n\n【For Pay Transparency】Compensation Description (Annually)\n\nThe base salary range for this position in the selected city is $151200 - $311600 annually.\n\n​\n\nCompensation may vary outside of this range depending on a number of factors, including a candidate’s qualifications, skills, competencies and experience, and location. Base pay is one part of the Total Package that is provided to compensate and recognize employees for their work, and this role may be eligible for additional discretionary bonuses/incentives, and restricted stock units.\n\n​\n\nBenefits may vary depending on the nature of employment and the country work location. Employees have day one access to medical, dental, and vision insurance, a 401(k) savings plan with company match, paid parental leave, short-term and long-term disability coverage, life insurance, wellbeing benefits, among others. Employees also receive 10 paid holidays per year, 10 paid sick days per year and 17 days of Paid Personal Time (prorated upon hire with increasing accruals by tenure).\n\n​\n\nThe Company reserves the right to modify or change these benefits programs at any time, with or without notice.\n\n​\n\nFor Los Angeles County (unincorporated) Candidates:\n\n​\n\nQualified applicants with arrest or conviction records will be considered for employment in accordance with all federal, state, and local laws including the Los Angeles County Fair Chance Ordinance for Employers and the California Fair Chance Act. Our company believes that criminal history may have a direct, adverse and negative relationship on the following job duties, potentially resulting in the withdrawal of the conditional offer of employment:\n\n​\n\n1. Interacting and occasionally having unsupervised contact with internal/external clients and/or colleagues;\n\n​\n\n2. Appropriately handling and managing confidential information including proprietary and trade secret information and access to information technology systems; and\n\n​\n\n3. Exercising sound judgment.\n\n​\n\nAbout TikTok\n\nTikTok is the leading destination for short-form mobile video. At TikTok, our mission is to inspire creativity and bring joy. TikTok's global headquarters are in Los Angeles and Singapore, and we also have offices in New York City, London, Dublin, Paris, Berlin, Dubai, Jakarta, Seoul, and Tokyo.\n\n​\n\nWhy Join Us\n\nInspiring creativity is at the core of TikTok's mission. Our innovative product is built to help people authentically express themselves, discover and connect – and our global, diverse teams make that possible. Together, we create value for our communities, inspire creativity and bring joy - a mission we work towards every day.\n\n​\n\nWe strive to do great things with great people. We lead with curiosity, humility, and a desire to make impact in a rapidly growing tech company. Every challenge is an opportunity to learn and innovate as one team. We're resilient and embrace challenges as they come. By constantly iterating and fostering an \"Always Day 1\" mindset, we achieve meaningful breakthroughs for ourselves, our company, and our users. When we create and grow together, the possibilities are limitless. Join us.\n\n​\n\n​\n\nDiversity & Inclusion\n\n​\n\nTikTok is committed to creating an inclusive space where employees are valued for their skills, experiences, and unique perspectives. Our platform connects people from across the globe and so does our workplace. At TikTok, our mission is to inspire creativity and bring joy. To achieve that goal, we are committed to celebrating our diverse voices and to creating an environment that reflects the many communities we reach. We are passionate about this and hope you are too.\n\n​\n\nTikTok Accommodation\n\nTikTok is committed to providing reasonable accommodations in our recruitment processes for candidates with disabilities, pregnancy, sincerely held religious beliefs or other reasons protected by applicable laws. If you need assistance or a reasonable accommodation, please reach out to us at\n\nhttps://tinyurl.com/RA-request",
+          "companyName": "TikTok",
+          "companyUrl": "https://www.indeed.com/cmp/Tiktok",
+          "companyHeaderUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_headerimage/1960x400/c6b31072b68e5e09f3ffa00b4fafbdf3",
+          "location": {
+            "city": "San Jose",
+            "postalCode": null,
+            "country": "United States",
+            "countryCode": "US",
+            "formattedAddressLong": "San Jose, CA",
+            "formattedAddressShort": "San Jose, CA",
+            "latitude": 37.33939,
+            "longitude": -121.89496,
+            "streetAddress": null,
+            "fullAddress": "San Jose, CA"
+          },
+          "salary": {
+            "salaryCurrency": "USD",
+            "salaryMax": 311600,
+            "salaryMin": 151200,
+            "salarySource": "EXTRACTION",
+            "salaryText": "$151,200 - $311,600 a year",
+            "salaryType": "yearly"
+          },
+          "rating": {
+            "rating": 3.3,
+            "count": 333
+          },
+          "benefits": [
+            "Paid parental leave",
+            "Paid holidays",
+            "Disability insurance",
+            "Health insurance",
+            "Dental insurance",
+            "RSU",
+            "Parental leave",
+            "Vision insurance",
+            "401(k) matching",
+            "Life insurance",
+            "Paid sick time"
+          ],
+          "occupation": [
+            "Digital Marketing Occupations",
+            "Technology Occupations",
+            "Search Marketing Occupations",
+            "Technology Management Occupations",
+            "Search Engine Optimization Specialists",
+            "Technical Product Managers & Owners",
+            "Marketing, Advertising & Public Relations Occupations",
+            "Marketing & Advertising Occupations"
+          ],
+          "attributes": [
+            "Roadmap creation (System development task)",
+            "System development product management",
+            "Product development project management",
+            "Paid parental leave",
+            "Requirements design",
+            "Operations coordination",
+            "Paid holidays",
+            "Regulatory compliance",
+            "Leading organic search traffic initiatives",
+            "Disability insurance",
+            "Office",
+            "3 years",
+            "Health insurance",
+            "Dental insurance",
+            "Technical solutions implementation",
+            "Key Performance Indicators",
+            "Collaboration with product development teams",
+            "RSU",
+            "Requirements analysis",
+            "New customer acquisition",
+            "Content marketing SEO projects",
+            "Data analytics",
+            "Requirements management",
+            "Conversion optimization",
+            "Parental leave",
+            "Leading team collaboration initiatives",
+            "Scalability",
+            "Fair chance",
+            "Managing projects",
+            "Product strategy",
+            "Vision insurance",
+            "401(k) matching",
+            "International corporation experience",
+            "Metadata",
+            "Business requirements",
+            "Growth marketing strategy",
+            "Senior level",
+            "Legal compliance",
+            "Cross-functional team management",
+            "Communication skills",
+            "Information architecture",
+            "Life insurance",
+            "Cross-functional communication",
+            "Paid sick time"
+          ],
+          "contacts": [],
+          "shifts": [],
+          "socialInsurance": [
+            "Health insurance"
+          ],
+          "workingSystem": [],
+          "shiftAndSchedule": [],
+          "postedToday": false,
+          "hiringDemand": {
+            "isHighVolumeHiring": false,
+            "isUrgentHire": false
+          },
+          "datePublished": "2026-02-28",
+          "expired": false,
+          "source": "TikTok",
+          "age": "3 months ago",
+          "isRemote": false,
+          "locale": "us",
+          "language": "en",
+          "jobUrl": "https://www.indeed.com/viewjob?jk=e4674e5f2e7faf30",
+          "applyUrl": "https://lifeattiktok.com/search/7538285732869130503",
+          "emails": [],
+          "companyAddresses": [
+            "Los Angeles, CA"
+          ],
+          "companyNumEmployees": "10,000+",
+          "companyRevenue": "Decline to state",
+          "companyDescription": "TikTok is the world's leading destination for short-form video. Our platform is built to help imaginations thrive. This is doubly true of the teams that make TikTok possible. \r\n\r\n \r\nOur employees lead with curiosity, and move at the speed of culture. Combined with our company's flat structure, you'll be given dynamic opportunities to make a real impact on a rapidly expanding company as you grow your career. We have offices across Asia Pacific, the Middle East, Europe, and the Americas – and we're just getting started.\r\n\r\nFollow us on social media for career and company updates:\r\n\r\nLinkedIn: https://www.linkedin.com/company/tiktok\r\nInstagram: https://www.instagram.com/lifeattiktok/\r\nFacebook: https://www.facebook.com/tiktok/\r\nCompany Career website: https://www.tiktok.com/\r\nTikTok: https://www.tiktok.com/@lifeattiktok\r\n",
+          "companyFounded": {
+            "year": 2016
+          },
+          "companyBriefDescription": "TikTok is a destination for short-form mobile videos.",
+          "companyLinks": {
+            "facebook": "https://www.facebook.com/tiktok/",
+            "instagram": "https://www.instagram.com/lifeattiktok",
+            "twitter": null,
+            "customLinks": [
+              {
+                "name": "LinkedIn",
+                "url": "https://www.linkedin.com/company/tiktok"
+              },
+              {
+                "name": "ByteDance",
+                "url": "http://www.bytedance.com"
+              }
+            ],
+            "corporateWebsite": "https://www.tiktok.com/"
+          },
+          "companyCeo": {
+            "name": "Shou Zi Chew",
+            "photoUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_ceophoto/512x512/97e665a8d665548274a13c52e20bb5f4",
+            "startDate": null
+          },
+          "requirements": []
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "jobKey": "30a8ab24c957e6ea",
+          "scrapingInfo": {
+            "page": 1,
+            "index": 4
+          },
+          "title": "SEO Manager",
+          "jobType": [
+            "Full-time"
+          ],
+          "descriptionHtml": "The Opportunity\n<br>Adobe is looking for a SEO Manager to drive organic discovery for Firefly, Adobe’s outstanding generative AI product. This position is responsible for Firefly’s comprehensive SEO strategy, covering both traditional search and generative engine optimization.\n<br><br>\nWe seek a candidate to act as the main SEO lead for Firefly, crafting how creators find, assess, and embrace Firefly on Adobe.com and new AI search platforms. This position combines SEO planning, product collaboration, prioritization, and data analysis. They will collaborate closely with Product, Engineering, Design and GTM teams to ensure Firefly launches and ongoing experiences are visible and trackable at scale.\n<br><br>\nThis is a high-impact role with direct influence on Firefly’s growth and long-term adoption.\n<br><br>\nWhat you’ll do\n<br>Take charge of and develop the SEO approach and plan for Adobe Firefly, including prioritization across feature pages, workflows, and evergreen growth initiatives.\n<br>Partner with Product Management, Engineering, and Design to integrate SEO requirements into page templates, feature launches, and platform decisions.\n<br>Drive the strategy and optimization of Firefly’s feature page ecosystem, including internal linking frameworks and scalable content systems.\n<br>Own SEO mentorship for product and feature launches, ensuring discoverability is built in from the beginning.\n<br>Define and maintain Firefly’s keyword universe, topic taxonomy, and demand mapping, aligned to customer intent and product priorities.\n<br>Collaborate with analytics teams to assess SEO and GEO performance, interpret insights into clear recommendations, and share progress and tradeoffs with senior partners.\n<br>Function as the final SEO decision-maker for Firefly initiatives, balancing impact, resourcing, and long-term scalability.\n<br><br>\nWhat you need to succeed\n<br>4+ years of SEO experience, with ownership of strategy for large-scale, high-visibility products or platforms.\n<br>Strong foundation in content systems and workflows.\n<br>Proven experience collaborating across Product, Engineering, Development, and Marketing teams.\n<br>Experience defining and accomplishing SEO strategies in fast paced, ambiguous environments.\n<br>Strong analytical and communication skills, with the ability to translate data into clear priorities and decisions.\n<br>Technical SEO expertise.\n<br>Preferred qualifications\n<br>Experience working on SEO for AI-powered products and adapting strategies for discovery driven by large language models.\n<br>Experience scaling feature-led or product-led SEO programs.\n<br>Familiarity with international SEO considerations and multi-market performance analysis.\n<br>Confidence in influencing senior leadership and being a strong advocate for the SEO program.\n<br><br>\nAbout Adobe\n<br>Adobe empowers everyone to create through innovative platforms and tools that unleash creativity, productivity and personalized customer experiences. Adobe’s industry-leading offerings including Adobe Acrobat Studio, Adobe Express, Adobe Firefly, Creative Cloud, Adobe Experience Platform, Adobe Experience Manager, and GenStudio enable people and businesses to turn ideas into impact, powered by AI and driven by human ingenuity.\n<br><br>\nOur 30,000+ employees worldwide are creating the future and raising the bar as we drive the next decade of growth. We’re on a mission to hire the very best and believe in creating a company culture where all employees are empowered to make an impact. At Adobe, we believe that great ideas can come from anywhere in the organization. The next big idea could be yours.\n<br><br>\nLet’s Adobe together\n<br>At Adobe, we believe in creating a company culture where all employees are empowered to make an impact. Learn more about Adobe life, including our values and culture , focus on people, purpose and community , Adobe for All , comprehensive benefits programs , the stories we tell , the customers we serve, and how you can help us advance our mission of empowering everyone to create.\n<br><br>\nAdobe is proud to be an Equal Employment Opportunity employer. We do not discriminate based on gender, race or color, ethnicity or national origin, age, disability, religion, sexual orientation, gender identity or expression, veteran status, or any other protected characteristic. Learn more.\n<br><br>\nAdobe aims to make our Careers website and recruiting process accessible to any and all users. If you have a disability or special need that requires accommodation to navigate our website or complete the application process, email accommodations@adobe.com or call +1 408-536-3015.\n<br><br>\n<b>AI Use Guidelines for Interviews:</b><br>\nOur interviews are designed to reflect your own skills and thinking. The use of AI or recording tools during live interviews is not permitted unless explicitly invited by the interviewer or approved in advance as part of a reasonable accommodation. If these tools are used inappropriately or in a way that misrepresents your work, your application may not move forward in the process.\n<br><br>\nAt Adobe, we empower employees to innovate with AI — and we look for candidates eager to do the same. As part of the hiring experience, we provide clear guidance on where AI is encouraged during the process and where it’s restricted during live interviews. See how we think about AI in the hiring experience .\n<br><br>\n<b>Expected Pay Range:</b> Our compensation reflects the cost of labor across several U.S. geographic markets, and we pay differently based on those defined markets. The U.S. pay range for this position is $80,700 -- $151,200 annually. Pay within this range varies by work location and may also depend on job-related knowledge, skills, and experience. Your recruiter can share more about the specific salary range for the job location during the hiring process.\n<br><br>\nIn California, the pay range for this position is $104,400 - $151,200\n<br>In New York, the pay range for this position is $104,400 - $151,200\n<br><br>\nAt Adobe, for sales roles starting salaries are expressed as total target compensation (TTC = base + commission), and short-term incentives are in the form of sales commission plans. Non-sales roles starting salaries are expressed as base salary and short-term incentives are in the form of the Annual Incentive Plan (AIP).\n<br><br>\nIn addition, certain roles may be eligible for long-term incentives in the form of a new hire equity award.\n<br><br>\n<b>State-Specific Notices:</b><br>\n<b>California :</b><br>\nFair Chance Ordinances\n<br>Adobe will consider qualified applicants with arrest or conviction records for employment in accordance with state and local laws and “fair chance” ordinances.\n<br><br>\n<b>Colorado:</b><br>\nApplication Window Notice\n<br><br>\nIf this role is open to hiring in Colorado (as listed on the job posting), the application window will remain open until at least the date and time stated above in Pacific Time, in compliance with Colorado pay transparency regulations. If this role does not have Colorado listed as a hiring location, no specific application window applies, and the posting may close at any time based on hiring needs.\n<br><br>\n<b>Massachusetts:</b><br>\nMassachusetts Legal Notice\n<br>It is unlawful in Massachusetts to require or administer a lie detector test as a condition of employment or continued employment. An employer who violates this law shall be subject to criminal penalties and civil liability.",
+          "companyLogoUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_squarelogo/256x256/8556eb9d8fef8a256b09c6eed07eb084",
+          "descriptionText": "The Opportunity\nAdobe is looking for a SEO Manager to drive organic discovery for Firefly, Adobe’s outstanding generative AI product. This position is responsible for Firefly’s comprehensive SEO strategy, covering both traditional search and generative engine optimization.\n\nWe seek a candidate to act as the main SEO lead for Firefly, crafting how creators find, assess, and embrace Firefly on Adobe.com and new AI search platforms. This position combines SEO planning, product collaboration, prioritization, and data analysis. They will collaborate closely with Product, Engineering, Design and GTM teams to ensure Firefly launches and ongoing experiences are visible and trackable at scale.\n\nThis is a high-impact role with direct influence on Firefly’s growth and long-term adoption.\n\nWhat you’ll do\nTake charge of and develop the SEO approach and plan for Adobe Firefly, including prioritization across feature pages, workflows, and evergreen growth initiatives.\nPartner with Product Management, Engineering, and Design to integrate SEO requirements into page templates, feature launches, and platform decisions.\nDrive the strategy and optimization of Firefly’s feature page ecosystem, including internal linking frameworks and scalable content systems.\nOwn SEO mentorship for product and feature launches, ensuring discoverability is built in from the beginning.\nDefine and maintain Firefly’s keyword universe, topic taxonomy, and demand mapping, aligned to customer intent and product priorities.\nCollaborate with analytics teams to assess SEO and GEO performance, interpret insights into clear recommendations, and share progress and tradeoffs with senior partners.\nFunction as the final SEO decision-maker for Firefly initiatives, balancing impact, resourcing, and long-term scalability.\n\nWhat you need to succeed\n4+ years of SEO experience, with ownership of strategy for large-scale, high-visibility products or platforms.\nStrong foundation in content systems and workflows.\nProven experience collaborating across Product, Engineering, Development, and Marketing teams.\nExperience defining and accomplishing SEO strategies in fast paced, ambiguous environments.\nStrong analytical and communication skills, with the ability to translate data into clear priorities and decisions.\nTechnical SEO expertise.\nPreferred qualifications\nExperience working on SEO for AI-powered products and adapting strategies for discovery driven by large language models.\nExperience scaling feature-led or product-led SEO programs.\nFamiliarity with international SEO considerations and multi-market performance analysis.\nConfidence in influencing senior leadership and being a strong advocate for the SEO program.\n\nAbout Adobe\nAdobe empowers everyone to create through innovative platforms and tools that unleash creativity, productivity and personalized customer experiences. Adobe’s industry-leading offerings including Adobe Acrobat Studio, Adobe Express, Adobe Firefly, Creative Cloud, Adobe Experience Platform, Adobe Experience Manager, and GenStudio enable people and businesses to turn ideas into impact, powered by AI and driven by human ingenuity.\n\nOur 30,000+ employees worldwide are creating the future and raising the bar as we drive the next decade of growth. We’re on a mission to hire the very best and believe in creating a company culture where all employees are empowered to make an impact. At Adobe, we believe that great ideas can come from anywhere in the organization. The next big idea could be yours.\n\nLet’s Adobe together\nAt Adobe, we believe in creating a company culture where all employees are empowered to make an impact. Learn more about Adobe life, including our values and culture , focus on people, purpose and community , Adobe for All , comprehensive benefits programs , the stories we tell , the customers we serve, and how you can help us advance our mission of empowering everyone to create.\n\nAdobe is proud to be an Equal Employment Opportunity employer. We do not discriminate based on gender, race or color, ethnicity or national origin, age, disability, religion, sexual orientation, gender identity or expression, veteran status, or any other protected characteristic. Learn more.\n\nAdobe aims to make our Careers website and recruiting process accessible to any and all users. If you have a disability or special need that requires accommodation to navigate our website or complete the application process, email accommodations@adobe.com or call +1 408-536-3015.\n\nAI Use Guidelines for Interviews:\nOur interviews are designed to reflect your own skills and thinking. The use of AI or recording tools during live interviews is not permitted unless explicitly invited by the interviewer or approved in advance as part of a reasonable accommodation. If these tools are used inappropriately or in a way that misrepresents your work, your application may not move forward in the process.\n\nAt Adobe, we empower employees to innovate with AI — and we look for candidates eager to do the same. As part of the hiring experience, we provide clear guidance on where AI is encouraged during the process and where it’s restricted during live interviews. See how we think about AI in the hiring experience .\n\nExpected Pay Range: Our compensation reflects the cost of labor across several U.S. geographic markets, and we pay differently based on those defined markets. The U.S. pay range for this position is $80,700 -- $151,200 annually. Pay within this range varies by work location and may also depend on job-related knowledge, skills, and experience. Your recruiter can share more about the specific salary range for the job location during the hiring process.\n\nIn California, the pay range for this position is $104,400 - $151,200\nIn New York, the pay range for this position is $104,400 - $151,200\n\nAt Adobe, for sales roles starting salaries are expressed as total target compensation (TTC = base + commission), and short-term incentives are in the form of sales commission plans. Non-sales roles starting salaries are expressed as base salary and short-term incentives are in the form of the Annual Incentive Plan (AIP).\n\nIn addition, certain roles may be eligible for long-term incentives in the form of a new hire equity award.\n\nState-Specific Notices:\n\nCalifornia :\nFair Chance Ordinances\nAdobe will consider qualified applicants with arrest or conviction records for employment in accordance with state and local laws and “fair chance” ordinances.\n\nColorado:\nApplication Window Notice\n\nIf this role is open to hiring in Colorado (as listed on the job posting), the application window will remain open until at least the date and time stated above in Pacific Time, in compliance with Colorado pay transparency regulations. If this role does not have Colorado listed as a hiring location, no specific application window applies, and the posting may close at any time based on hiring needs.\n\nMassachusetts:\nMassachusetts Legal Notice\nIt is unlawful in Massachusetts to require or administer a lie detector test as a condition of employment or continued employment. An employer who violates this law shall be subject to criminal penalties and civil liability.",
+          "companyName": "Adobe",
+          "companyUrl": "https://www.indeed.com/cmp/Adobe",
+          "companyHeaderUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_headerimage/1960x400/8723ab138c64f79f6bbba5e276ca85f5",
+          "location": {
+            "city": "San Jose",
+            "postalCode": "95110",
+            "country": "United States",
+            "countryCode": "US",
+            "formattedAddressLong": "San Jose, CA 95110",
+            "formattedAddressShort": "San Jose, CA",
+            "latitude": 37.336533,
+            "longitude": -121.89953,
+            "streetAddress": null,
+            "fullAddress": "San Jose, CA 95110"
+          },
+          "salary": {
+            "salaryCurrency": "USD",
+            "salaryMax": 151200,
+            "salaryMin": 80700,
+            "salarySource": "EXTRACTION",
+            "salaryText": "$80,700 - $151,200 a year",
+            "salaryType": "yearly"
+          },
+          "rating": {
+            "rating": 4.2,
+            "count": 871
+          },
+          "benefits": [],
+          "occupation": [
+            "Digital Marketing Occupations",
+            "Search Marketing Occupations",
+            "Search Engine Optimization Specialists",
+            "Marketing, Advertising & Public Relations Occupations",
+            "Marketing & Advertising Occupations"
+          ],
+          "attributes": [
+            "Commission pay",
+            "Leading organic search traffic initiatives",
+            "Full-time",
+            "Mid-level",
+            "Taxonomy",
+            "Collaboration with product development teams",
+            "Analysis skills",
+            "Decision making",
+            "Product management",
+            "Content marketing SEO projects",
+            "Data interpretation",
+            "Fair chance",
+            "4 years",
+            "Data-driven decision making",
+            "Communication skills"
+          ],
+          "contacts": [],
+          "shifts": [],
+          "socialInsurance": [],
+          "workingSystem": [],
+          "shiftAndSchedule": [],
+          "postedToday": false,
+          "hiringDemand": {
+            "isHighVolumeHiring": false,
+            "isUrgentHire": false
+          },
+          "datePublished": "2026-04-03",
+          "expired": false,
+          "source": "Adobe",
+          "age": "2 months ago",
+          "isRemote": false,
+          "locale": "us",
+          "language": "en",
+          "jobUrl": "https://www.indeed.com/viewjob?jk=30a8ab24c957e6ea",
+          "applyUrl": "https://careers.adobe.com/us/en/job/ADOBUSR167283EXTERNALENUS/SEO-Manager?utm_source=indeed&utm_medium=phenom-feeds",
+          "emails": [
+            "accommodations@adobe.com"
+          ],
+          "companyAddresses": [
+            "San Jose, CA"
+          ],
+          "companyNumEmployees": "10,000+",
+          "companyRevenue": "$5B to $10B (USD)",
+          "companyDescription": "Adobe is the global leader in digital media and digital marketing solutions. Our creative, marketing and document solutions empower everyone – from emerging artists to global brands – to bring digital creations to life and deliver immersive, compelling experiences to the right person at the right moment for the best results. In short, Adobe is everywhere, and we’re changing the world through digital experiences.",
+          "companyFounded": {
+            "year": 1982
+          },
+          "companyBriefDescription": "Let's Create Experiences that Matter.",
+          "companyLinks": {
+            "facebook": "https://www.facebook.com/Adobe",
+            "instagram": "https://www.instagram.com/adobe",
+            "twitter": "https://twitter.com/AdobeCareers",
+            "customLinks": [
+              {
+                "name": "LinkedIn page",
+                "url": "http://www.linkedin.com/company/adobe"
+              },
+              {
+                "name": "Adobe Careers website",
+                "url": "http://www.adobe.com/careers.html"
+              },
+              {
+                "name": "YouTube channel",
+                "url": "http://www.youtube.com/user/AdobeCareers"
+              },
+              {
+                "name": "Adobe Life Blog",
+                "url": "http://blogs.adobe.com/adobelife/"
+              }
+            ],
+            "corporateWebsite": "http://www.adobe.com"
+          },
+          "companyCeo": {
+            "name": "Shantanu Narayen",
+            "photoUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_ceophoto/512x512/2c97b120dcdf4eff839179705e05e123",
+            "startDate": null
+          },
+          "requirements": []
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "jobKey": "0b2e792df41c9973",
+          "scrapingInfo": {
+            "page": 1,
+            "index": 5
+          },
+          "title": "Marketing Manager",
+          "jobType": [
+            "Full-time"
+          ],
+          "descriptionHtml": "<p><b>Marketing Manager</b></p><p>EntryPoint is a digital marketing company that drives brand sales at the store level. Our AI-powered &ldquo;check in&rdquo; kiosks network, installed in nearly 2,000 grocery stores across the East Coast, including Food Lion, Winn-Dixie, Stop &amp; Shop, and Price Chopper/Market 32, connects CPG brands with shoppers at the moment of purchase through digital advertised coupons, in-store media, brand messaging and personalized offers. We're growing fast, and our store network will continue to expand over the next 12&ndash;18 months.</p><p>We're looking for a <b>Marketing Manager</b> who is equal parts analyst and storyteller &mdash; someone who can dig into grocery transaction data, find the insight that matters, and walk a CPG client through it with confidence. You'll work alongside our Sales team as a strategic partner, owning the analytical and presentation work that wins new business and deepens existing client relationships.</p><p><b>What You'll Do</b></p><p><i><b>Client &amp; Sales Partnership</b></i></p><ul><li>Function as the day-to-day marketing partner to assigned Sales VP, supporting account strategy, client prep, and in-meeting execution</li><li>Participate and/or lead client conversations across the full program lifecycle &mdash; from initial pitch through interim results, final performance, and renewal</li><li>Build and deliver compelling presentations to CPG brand teams that clearly communicate category dynamics, promotion strategy, and ROI</li></ul><p><i><b>Analytics &amp; Campaign Performance</b></i></p><ul><li>Analyze brand and category sales data using proprietary data profiling tools to identify promotion opportunities and competitive threats</li><li>Translate campaign performance data into clear, actionable narratives &mdash; not just reporting, but recommending what to do next</li><li>Monitor in-flight campaigns and flag adjustments needed to hit client objectives</li><li>Develop post-program analyses that connect program activity to measurable sales outcomes and drive future planning</li><li>Extract best practice learnings across campaigns to build repeatable stories on the value of data-driven promotion</li></ul><p><i><b>Program &amp; Content Development</b></i></p><ul><li>Design marketing campaigns grounded in market trends, consumer insights, and competitive landscape analysis &mdash; built to address CPG brand challenges and drive measurable growth</li><li>Own the development of client materials and presentations used for customer meetings and program sell-in</li><li>Maintain knowledge of the grocery retail environment through regular in-store and online visits</li><li>Stay ahead of industry trends in shopper marketing, retail media, and CPG promotions &mdash; bring new ideas to the team proactively</li></ul><p><b>What We're Looking For</b></p><p><i><b>Required</b></i></p><ul><li>Bachelor&rsquo;s degree in Marketing, Market Research, Business Administration, or related field</li><li>2+ years of experience in CPG, retail/trade/shopper marketing, or a promotion or couponing agency</li><li>High proficiency in Excel and PowerPoint</li><li>Hands-on experience with syndicated data tools (e.g. Circana/IRI, Nielsen, or SPINS)</li><li>Strong analytical skills with the ability to build a clear narrative from complex data</li><li>Proven ability to build and deliver polished, persuasive presentations to external clients</li><li>Experience supporting or partnering directly with a sales team in a client-facing capacity</li></ul><p><i><b>Skills That Set You Apart</b></i></p><ul><li>Curious by nature &mdash; you keep asking &quot;why&quot; until you find something actionable</li><li>As comfortable in a client meeting as you are in a spreadsheet</li><li>Able to take a complex data story and make it land in a 30-minute presentation</li><li>You understand what drives CPG brand decision-making and can speak their language</li><li>Organized, self-directed, and able to manage multiple client priorities simultaneously</li></ul><p><b>Growth Path</b></p><p>This role has a development track into direct Sales or into Market Research / Category specialization, depending on where your strengths and interests take you.</p><p>*The above is not an all-inclusive list of your responsibilities and skills, which may include suitable areas not specifically mentioned above.</p><p>The annual salary range for this position is $55,000&ndash;$80,000, based on experience. We offer an excellent suite of employee benefits, including health insurance (including vision), disability, flexible spending, and 401k with Company match.</p><p>Job Type: Full-time</p><p>Pay: $55,000.00 - $80,000.00 per year</p><p>Benefits:</p><ul><li>401(k) matching</li><li>Dental insurance</li><li>Health insurance</li><li>Health savings account</li><li>Paid time off</li><li>Vision insurance</li></ul><p>Education:</p><ul><li>Bachelor's (Required)</li></ul><p>Experience:</p><ul><li>Retail Grocery: 2 years (Required)</li><li>Marketing: 2 years (Preferred)</li></ul><p>Work Location: Remote</p>",
+          "descriptionText": "*Marketing Manager*\n\nEntryPoint is a digital marketing company that drives brand sales at the store level. Our AI-powered “check in” kiosks network, installed in nearly 2,000 grocery stores across the East Coast, including Food Lion, Winn-Dixie, Stop & Shop, and Price Chopper/Market 32, connects CPG brands with shoppers at the moment of purchase through digital advertised coupons, in-store media, brand messaging and personalized offers. We're growing fast, and our store network will continue to expand over the next 12–18 months.\n\nWe're looking for a *Marketing Manager* who is equal parts analyst and storyteller — someone who can dig into grocery transaction data, find the insight that matters, and walk a CPG client through it with confidence. You'll work alongside our Sales team as a strategic partner, owning the analytical and presentation work that wins new business and deepens existing client relationships.\n\n*What You'll Do*\n\n_*Client & Sales Partnership*_\n\n* Function as the day-to-day marketing partner to assigned Sales VP, supporting account strategy, client prep, and in-meeting execution\n* Participate and/or lead client conversations across the full program lifecycle — from initial pitch through interim results, final performance, and renewal\n* Build and deliver compelling presentations to CPG brand teams that clearly communicate category dynamics, promotion strategy, and ROI\n\n_*Analytics & Campaign Performance*_\n\n* Analyze brand and category sales data using proprietary data profiling tools to identify promotion opportunities and competitive threats\n* Translate campaign performance data into clear, actionable narratives — not just reporting, but recommending what to do next\n* Monitor in-flight campaigns and flag adjustments needed to hit client objectives\n* Develop post-program analyses that connect program activity to measurable sales outcomes and drive future planning\n* Extract best practice learnings across campaigns to build repeatable stories on the value of data-driven promotion\n\n_*Program & Content Development*_\n\n* Design marketing campaigns grounded in market trends, consumer insights, and competitive landscape analysis — built to address CPG brand challenges and drive measurable growth\n* Own the development of client materials and presentations used for customer meetings and program sell-in\n* Maintain knowledge of the grocery retail environment through regular in-store and online visits\n* Stay ahead of industry trends in shopper marketing, retail media, and CPG promotions — bring new ideas to the team proactively\n\n*What We're Looking For*\n\n_*Required*_\n\n* Bachelor’s degree in Marketing, Market Research, Business Administration, or related field\n* 2+ years of experience in CPG, retail/trade/shopper marketing, or a promotion or couponing agency\n* High proficiency in Excel and PowerPoint\n* Hands-on experience with syndicated data tools (e.g. Circana/IRI, Nielsen, or SPINS)\n* Strong analytical skills with the ability to build a clear narrative from complex data\n* Proven ability to build and deliver polished, persuasive presentations to external clients\n* Experience supporting or partnering directly with a sales team in a client-facing capacity\n\n_*Skills That Set You Apart*_\n\n* Curious by nature — you keep asking \"why\" until you find something actionable\n* As comfortable in a client meeting as you are in a spreadsheet\n* Able to take a complex data story and make it land in a 30-minute presentation\n* You understand what drives CPG brand decision-making and can speak their language\n* Organized, self-directed, and able to manage multiple client priorities simultaneously\n\n*Growth Path*\n\nThis role has a development track into direct Sales or into Market Research / Category specialization, depending on where your strengths and interests take you.\n\n\\*The above is not an all-inclusive list of your responsibilities and skills, which may include suitable areas not specifically mentioned above.\n\nThe annual salary range for this position is $55,000–$80,000, based on experience. We offer an excellent suite of employee benefits, including health insurance (including vision), disability, flexible spending, and 401k with Company match.\n\nJob Type: Full-time\n\nPay: $55,000.00 - $80,000.00 per year\n\nBenefits:\n* 401(k) matching\n* Dental insurance\n* Health insurance\n* Health savings account\n* Paid time off\n* Vision insurance\n\n\n\nEducation:\n* Bachelor's (Required)\n\nExperience:\n* Retail Grocery: 2 years (Required)\n* Marketing: 2 years (Preferred)\n\nWork Location: Remote",
+          "companyName": "Entry Point Communications LLC",
+          "companyUrl": "https://www.indeed.com/cmp/Entry-Point-Communications-LLC",
+          "location": {
+            "city": "Remote",
+            "postalCode": null,
+            "country": "United States",
+            "countryCode": "US",
+            "formattedAddressLong": "Remote",
+            "formattedAddressShort": "Remote",
+            "latitude": 25,
+            "longitude": -40,
+            "streetAddress": null,
+            "fullAddress": "Remote"
+          },
+          "salary": {
+            "salaryCurrency": "USD",
+            "salaryMax": 80000,
+            "salaryMin": 55000,
+            "salarySource": "EXTRACTION",
+            "salaryText": "$55,000 - $80,000 a year",
+            "salaryType": "yearly"
+          },
+          "rating": {
+            "rating": 0,
+            "count": 0
+          },
+          "benefits": [
+            "Health savings account",
+            "Health insurance",
+            "Dental insurance",
+            "Paid time off",
+            "Vision insurance",
+            "401(k) matching"
+          ],
+          "occupation": [
+            "Marketing, Advertising & Public Relations Occupations",
+            "Brand Strategists",
+            "Marketing & Advertising Occupations"
+          ],
+          "attributes": [
+            "Market research within retail industry",
+            "Teamwork",
+            "Program design",
+            "Customer relationship building",
+            "Sales collateral development",
+            "Presentation software",
+            "Health savings account",
+            "Sales analytics & reporting tools",
+            "Marketing",
+            "Nielsen",
+            "Spreadsheets",
+            "Writing skills",
+            "Identifying new business opportunities",
+            "Competitive analysis",
+            "Performance Reporting",
+            "Full-time",
+            "Yearly pay",
+            "Account development",
+            "Mid-level",
+            "Remote",
+            "Digital marketing tools",
+            "Bachelor’s degree in business administration",
+            "Health insurance",
+            "Sales data analysis",
+            "Sales presentations",
+            "Dental insurance",
+            "Bachelor's degree in marketing",
+            "Analysis skills",
+            "Historical sales data analysis",
+            "Bachelor's degree",
+            "Paid time off",
+            "Content development",
+            "Strategic promotions",
+            "US work authorization",
+            "Brand storytelling",
+            "Integrated marketing campaigns",
+            "Marketing ROI analysis",
+            "Data-driven problem-solving",
+            "Presentation preparation",
+            "Presentation creation",
+            "Business Administration",
+            "Marketing analytics",
+            "Grocery store",
+            "Client growth strategy",
+            "Vision insurance",
+            "Market research within consumer goods industry",
+            "401(k) matching",
+            "Retail brand promotion",
+            "Media campaign optimization",
+            "Analytical thinking",
+            "Business",
+            "Research findings presentation",
+            "Marketing agency experience",
+            "2 years",
+            "Marketing",
+            "Campaign performance reporting",
+            "Sales data tracking",
+            "Marketing collateral creation"
+          ],
+          "contacts": [],
+          "shifts": [],
+          "socialInsurance": [
+            "Health insurance"
+          ],
+          "workingSystem": [],
+          "shiftAndSchedule": [],
+          "postedToday": false,
+          "hiringDemand": {
+            "isHighVolumeHiring": false,
+            "isUrgentHire": false
+          },
+          "datePublished": "2026-02-04",
+          "expired": false,
+          "source": "Indeed",
+          "age": "4 months ago",
+          "isRemote": true,
+          "locale": "us",
+          "language": "en",
+          "jobUrl": "https://www.indeed.com/viewjob?jk=0b2e792df41c9973",
+          "emails": [],
+          "companyAddresses": [],
+          "companyLinks": {
+            "facebook": null,
+            "instagram": null,
+            "twitter": null,
+            "customLinks": [],
+            "corporateWebsite": null
+          },
+          "companyCeo": {
+            "name": null,
+            "photoUrl": null,
+            "startDate": null
+          },
+          "numOfCandidates": null,
+          "requirements": [
+            {
+              "label": "Bachelor's degree",
+              "requirementSeverity": "REQUIRED"
+            },
+            {
+              "label": "Teamwork",
+              "requirementSeverity": "REQUIRED"
+            },
+            {
+              "label": "Writing skills",
+              "requirementSeverity": "REQUIRED"
+            },
+            {
+              "label": "Analytical thinking",
+              "requirementSeverity": "REQUIRED"
+            },
+            {
+              "label": "Marketing analytics",
+              "requirementSeverity": "REQUIRED"
+            },
+            {
+              "label": "Business",
+              "requirementSeverity": "REQUIRED"
+            },
+            {
+              "label": "Presentation creation",
+              "requirementSeverity": "REQUIRED"
+            },
+            {
+              "label": "Marketing",
+              "requirementSeverity": "REQUIRED"
+            },
+            {
+              "label": "Integrated marketing campaigns",
+              "requirementSeverity": "REQUIRED"
+            },
+            {
+              "label": "Brand storytelling",
+              "requirementSeverity": "REQUIRED"
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "jobKey": "b3a3cbd260b7a1a9",
+          "scrapingInfo": {
+            "page": 1,
+            "index": 0
+          },
+          "title": "AI Visibility & Search Strategy Specialist | GEO/SEO",
+          "jobType": [],
+          "descriptionHtml": "<div><div><div><div><div><div><div><div><div><h1 class=\"jobSectionHeader\"><b>AI Visibility &amp; Search Strategy Specialist | GEO/SEO</b></h1>\n</div><div><p>Dallas, TX, United States\n</p></div><div><div><p>Apply Now</p>\n</div></div></div></div></div></div><div><div><div><div><div><div><h2 class=\"jobSectionHeader\"><b>Job Description</b></h2>\n<div><p><b>Change the world. Love your job.</b></p>\n<p>Texas Instruments is seeking a<b> AI Visibility &amp; Search Strategy Specialist</b>. In this role, you will contribute to the strategy for how our technology is perceived by LLMs and Search Engines. This isn't just about keywords; it&rsquo;s about Generative Experience Optimization (GEO) and high-level content strategy. You will use advanced visibility tools to track scores and insights across a strategic list of prompts, translating those scores into actionable recommendations for the business. On the day to day you will monitor and analyze our Web and AI visibility performance, own specific projects that will improve this visibility and interact with various stakeholders (internal and external) to drive execution.</p>\n<p><b>Key Responsibilities</b></p>\n<ul><li><b>Strategy &amp; Execution:</b> Develop and refine SEO, GEO, and LLM visibility strategies to improve our share in LLM response for our semiconductor portfolio.</li>\n<li><b>Defining the Unknown:</b> Help us define new KPIs. Since traditional metrics (like immediate revenue) don't always capture the impact of AI visibility, you will help create the metrics that prove our success.</li>\n<li><b>Cross-Functional Collaboration:</b> We depend on many teams for execution. You will act as the &quot;bridge,&quot; communicating priorities and creating collaborative touchpoints with content, web, and engineering teams.</li>\n<li><b>Fail Fast &amp; Learn:</b> Propose bold, new ideas and testing protocols. We value the &quot;positive failure&quot;, learning quickly from what doesn&rsquo;t work to double down on what does.</li>\n<li><b>Data Storytelling:</b> Analyze visibility scores and insights, making the data &quot;speak&quot; to stakeholders through clear, high-impact presentations and recommendations.</li><br>\n</ul><p></p><p><i>Texas Instruments will not sponsor job applicants for visas or work authorization for this position.</i></p>\n</div></div></div></div></div></div></div><div></div><div><div><div><div><div><div><h2 class=\"jobSectionHeader\"><b>Qualifications</b></h2>\n<div><p><b>Minimum requirements:</b></p>\n<ul><li>Bachelor&rsquo;s degree in Business, Engineering, Marketing, Data Science, Management Information Systems, or a related field.</li>\n<li>3 years of experience in SEO, GEO, LLM, Digital Strategy, or Data Analytics and Visualization with a proven track record of solving &quot;unstructured&quot; problems.</li>\n<li>Technical Savvy: Familiarity with LLM architectures, Search Engine algorithms, and web optimization strategies. Since LLMs rely on structured data, someone who understands <i>how</i> to make a website &quot;readable&quot; for a bot (using JSON-LD or Schema) would be a plus.</li>\n<li><p>Strategic Mindset: Experience in GEO or a deep curiosity to lead in this specific space.</p><br>\n</li></ul><p></p><p><b>Preferred qualifications:</b></p>\n<ul><li><b>Agile &amp; Curious:</b> You have a &quot;startup&quot; mindset within a large organization. You aren't waiting for a manual; you are writing it</li>\n<li><b>Data-Driven:</b> You are comfortable with ambiguity but obsessed with data. You can find the signal in the noise of visibility scores.</li>\n<li><b>Proactive Communicator:</b> You can influence teams you don&rsquo;t manage and present complex AI concepts to diverse audiences.</li>\n<li><b>LLM Industry thinker:</b> you have a natural curiosity about the evolution of LLM and stay in sync with the search industry evolution.</li>\n<li><b>Customer experience mindset:</b> You won&rsquo;t just execute; you will provide the &quot;human judgment&quot; to ensure our prompts reflect customer needs. You can understand our customer design development journey and are curious about improving it asking question beyond the scope of the AI visibility team and teaming up with other members of the Digital Selling group.</li>\n<li>Ability to establish strong relationships with key stakeholders critical to success, both internally and externally</li>\n<li>Strong verbal and written communication skills</li>\n<li>Ability to quickly ramp on new systems and processes</li>\n<li>Demonstrated strong interpersonal, analytical and problem-solving skills</li>\n<li>Ability to work in teams and collaborate effectively with people in different functions</li>\n<li>Ability to take the initiative and drive for results</li>\n<li>Strong time management skills that enable on-time project delivery</li>\n</ul></div></div></div></div></div></div></div><div></div><div><div><div><div><div><div><h2 class=\"jobSectionHeader\"><b>About Us</b></h2>\n<div><div><div><b>Why TI?</b>\n</div><div><ul><li>Engineer your future. We empower our employees to truly own their career and development. Come collaborate with some of the smartest people in the world to shape the future of electronics.</li>\n<li>We're different by design. Diverse backgrounds and perspectives are what push innovation forward and what make TI stronger. We value each and every voice, and look forward to hearing yours. Meet the people of TI</li>\n<li>Benefits that benefit you. We offer competitive pay and benefits designed to help you and your family live your best life. Your well-being is important to us.</li><br>\n</ul></div><div></div><br>\n<div><div><b>About Texas Instruments</b>\n</div><div>Texas Instruments Incorporated (Nasdaq: TXN) is a global semiconductor company that designs, manufactures and sells analog and embedded processing chips for markets such as industrial, automotive, data center, personal electronics and communications equipment. At our core, we have a passion to create a better world by making electronics more affordable through semiconductors. This passion is alive today as each generation of innovation builds upon the last to make our technology more reliable, more affordable and lower power, making it possible for semiconductors to go into electronics everywhere. Learn more at TI.com.<br>\n</div><div></div><br>\n<div><div>Texas Instruments is an equal opportunity employer and supports a diverse, inclusive work environment. All qualified applicants will receive consideration for employment without regard to race, color, religion, creed, disability, genetic information, national origin, gender, gender identity and expression, age, sexual orientation, marital status, veteran status, or any other characteristic protected by federal, state, or local laws.</div><br>\n<div></div><br>\n<div>If you are interested in this position, please apply to this requisition.</div>\n</div></div></div></div></div></div></div></div></div></div><div></div><div><div><div><div><div><div><div>TI does not make recruiting or hiring decisions based on citizenship, immigration status or national origin. However, if TI determines that information access or export control restrictions based upon applicable laws and regulations would prohibit you from working in this position without first obtaining an export license, TI expressly reserves the right not to seek such a license for you and either offer you a different position that does not require an export license or decline to move forward with your employment.</div>\n</div></div></div></div></div></div><div><div><div><div><div><div><h2 class=\"jobSectionHeader\"><b>Job Info</b></h2>\n<div><div><div><ul><li>Job Identification 25010521\n</li><li>Job Category Marketing\n</li><li>Posting Date 05/05/2026, 03:53 PM\n</li><li>Degree Level Bachelor's Degree\n</li><li>Locations EXSC 13532 N Central Expy, Dallas, TX, 75243, US\n</li><li>ECL/GTC Required Yes</li></ul></div></div></div></div></div></div></div></div></div></div></div></div></div><p></p>",
+          "companyLogoUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_squarelogo/256x256/81229889d93748c66f697d6713b83f12",
+          "descriptionText": "AI Visibility & Search Strategy Specialist | GEO/SEO\nDallas, TX, United States\nApply Now\nJob Description\n\nChange the world. Love your job.\n\nTexas Instruments is seeking a AI Visibility & Search Strategy Specialist. In this role, you will contribute to the strategy for how our technology is perceived by LLMs and Search Engines. This isn't just about keywords; it’s about Generative Experience Optimization (GEO) and high-level content strategy. You will use advanced visibility tools to track scores and insights across a strategic list of prompts, translating those scores into actionable recommendations for the business. On the day to day you will monitor and analyze our Web and AI visibility performance, own specific projects that will improve this visibility and interact with various stakeholders (internal and external) to drive execution.\n\nKey Responsibilities\n\nStrategy & Execution: Develop and refine SEO, GEO, and LLM visibility strategies to improve our share in LLM response for our semiconductor portfolio.\nDefining the Unknown: Help us define new KPIs. Since traditional metrics (like immediate revenue) don't always capture the impact of AI visibility, you will help create the metrics that prove our success.\nCross-Functional Collaboration: We depend on many teams for execution. You will act as the \"bridge,\" communicating priorities and creating collaborative touchpoints with content, web, and engineering teams.\nFail Fast & Learn: Propose bold, new ideas and testing protocols. We value the \"positive failure\", learning quickly from what doesn’t work to double down on what does.\nData Storytelling: Analyze visibility scores and insights, making the data \"speak\" to stakeholders through clear, high-impact presentations and recommendations.\n\nTexas Instruments will not sponsor job applicants for visas or work authorization for this position.\n\nQualifications\n\nMinimum requirements:\n\nBachelor’s degree in Business, Engineering, Marketing, Data Science, Management Information Systems, or a related field.\n3 years of experience in SEO, GEO, LLM, Digital Strategy, or Data Analytics and Visualization with a proven track record of solving \"unstructured\" problems.\nTechnical Savvy: Familiarity with LLM architectures, Search Engine algorithms, and web optimization strategies. Since LLMs rely on structured data, someone who understands how to make a website \"readable\" for a bot (using JSON-LD or Schema) would be a plus.\n\nStrategic Mindset: Experience in GEO or a deep curiosity to lead in this specific space.\n\nPreferred qualifications:\n\nAgile & Curious: You have a \"startup\" mindset within a large organization. You aren't waiting for a manual; you are writing it\nData-Driven: You are comfortable with ambiguity but obsessed with data. You can find the signal in the noise of visibility scores.\nProactive Communicator: You can influence teams you don’t manage and present complex AI concepts to diverse audiences.\nLLM Industry thinker: you have a natural curiosity about the evolution of LLM and stay in sync with the search industry evolution.\nCustomer experience mindset: You won’t just execute; you will provide the \"human judgment\" to ensure our prompts reflect customer needs. You can understand our customer design development journey and are curious about improving it asking question beyond the scope of the AI visibility team and teaming up with other members of the Digital Selling group.\nAbility to establish strong relationships with key stakeholders critical to success, both internally and externally\nStrong verbal and written communication skills\nAbility to quickly ramp on new systems and processes\nDemonstrated strong interpersonal, analytical and problem-solving skills\nAbility to work in teams and collaborate effectively with people in different functions\nAbility to take the initiative and drive for results\nStrong time management skills that enable on-time project delivery\nAbout Us\nWhy TI?\nEngineer your future. We empower our employees to truly own their career and development. Come collaborate with some of the smartest people in the world to shape the future of electronics.\nWe're different by design. Diverse backgrounds and perspectives are what push innovation forward and what make TI stronger. We value each and every voice, and look forward to hearing yours. Meet the people of TI\nBenefits that benefit you. We offer competitive pay and benefits designed to help you and your family live your best life. Your well-being is important to us.\n\nAbout Texas Instruments\nTexas Instruments Incorporated (Nasdaq: TXN) is a global semiconductor company that designs, manufactures and sells analog and embedded processing chips for markets such as industrial, automotive, data center, personal electronics and communications equipment. At our core, we have a passion to create a better world by making electronics more affordable through semiconductors. This passion is alive today as each generation of innovation builds upon the last to make our technology more reliable, more affordable and lower power, making it possible for semiconductors to go into electronics everywhere. Learn more at TI.com.\n\nTexas Instruments is an equal opportunity employer and supports a diverse, inclusive work environment. All qualified applicants will receive consideration for employment without regard to race, color, religion, creed, disability, genetic information, national origin, gender, gender identity and expression, age, sexual orientation, marital status, veteran status, or any other characteristic protected by federal, state, or local laws.\n\nIf you are interested in this position, please apply to this requisition.\nTI does not make recruiting or hiring decisions based on citizenship, immigration status or national origin. However, if TI determines that information access or export control restrictions based upon applicable laws and regulations would prohibit you from working in this position without first obtaining an export license, TI expressly reserves the right not to seek such a license for you and either offer you a different position that does not require an export license or decline to move forward with your employment.\nJob Info\nJob Identification 25010521\nJob Category Marketing\nPosting Date 05/05/2026, 03:53 PM\nDegree Level Bachelor's Degree\nLocations EXSC 13532 N Central Expy, Dallas, TX, 75243, US\nECL/GTC Required Yes",
+          "companyName": "Texas Instruments",
+          "companyUrl": "https://www.indeed.com/cmp/Texas-Instruments",
+          "companyHeaderUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_headerimage/1960x400/e9a025b00c7337321a1540ac97c3765e",
+          "location": {
+            "city": "Dallas",
+            "postalCode": null,
+            "country": "United States",
+            "countryCode": "US",
+            "formattedAddressLong": "Dallas, TX",
+            "formattedAddressShort": "Dallas, TX",
+            "latitude": 32.93067,
+            "longitude": -96.75355,
+            "streetAddress": "13532 North Central Expressway",
+            "fullAddress": "13532 North Central Expressway, Dallas, TX"
+          },
+          "salary": {},
+          "rating": {
+            "rating": 4.1,
+            "count": 2088
+          },
+          "benefits": [],
+          "occupation": [
+            "Digital Marketing Occupations",
+            "Search Marketing Occupations",
+            "Search Engine Optimization Specialists",
+            "Marketing, Advertising & Public Relations Occupations",
+            "Marketing & Advertising Occupations"
+          ],
+          "attributes": [
+            "AI models",
+            "Bachelor's degree in management information systems",
+            "Management Information Systems",
+            "Marketing",
+            "Writing skills",
+            "Engineering",
+            "Bachelor's degree in business",
+            "Leading organic search traffic initiatives",
+            "Data reporting",
+            "Information Systems",
+            "Mid-level",
+            "Digital marketing tools",
+            "3 years",
+            "Algorithms",
+            "Bachelor's degree in marketing",
+            "Marketing online analytics",
+            "Key Performance Indicators",
+            "Bachelor’s degree in engineering",
+            "US work authorization",
+            "Data-driven problem-solving",
+            "Data-driven content",
+            "Website analysis",
+            "JSON",
+            "Implementation of strategic initiatives",
+            "Data visualization",
+            "AI strategy",
+            "Cross-functional collaboration",
+            "Business",
+            "Achieving project delivery timelines",
+            "Research findings presentation",
+            "Data visualization projects",
+            "Content strategy alignment",
+            "Communication skills",
+            "Project stakeholder communication",
+            "Stakeholder relationship building",
+            "Generative AI",
+            "Data analytics technologies",
+            "Cross-functional communication",
+            "Bachelor's degree in data science",
+            "Data Science",
+            "Time management"
+          ],
+          "contacts": [],
+          "shifts": [],
+          "socialInsurance": [],
+          "workingSystem": [],
+          "shiftAndSchedule": [],
+          "postedToday": false,
+          "hiringDemand": {
+            "isHighVolumeHiring": false,
+            "isUrgentHire": false
+          },
+          "datePublished": "2026-05-05",
+          "expired": false,
+          "source": "Texas Instruments",
+          "age": "a month ago",
+          "isRemote": false,
+          "locale": "us",
+          "language": "en",
+          "jobUrl": "https://www.indeed.com/viewjob?jk=b3a3cbd260b7a1a9",
+          "applyUrl": "https://edbz.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX/job/25010521",
+          "emails": [
+            "more@ti.com"
+          ],
+          "companyAddresses": [
+            "Dallas, TX"
+          ],
+          "companyNumEmployees": "10,000+",
+          "companyRevenue": "more than $10B (USD)",
+          "companyDescription": "Texas Instruments has been making progress possible for decades. We are a global semiconductor company that designs, manufactures, tests and sells analog and embedded processing chips. Our more than 80,000 products help over 100,000 customers efficiently manage power, accurately sense and transmit data and provide the core control or processing in their designs, going into markets such as industrial, automotive, personal electronics, communications equipment and enterprise systems. Our passion to create a better world by making electronics more affordable through semiconductors is alive today as each generation of innovation builds upon the last to make our technology smaller, more efficient, more reliable and more affordable – opening new markets and making it possible for semiconductors to go into electronics everywhere. We think of this as Engineering Progress. It’s what we do and have been doing for decades. \r\n\r\nAt TI, we are continually recognized as a 'best place to work' - offering a creative and friendly work environment, a variety of assignments, and extensive professional development & training opportunities. \r\n\r\nCome change the world with us. ",
+          "companyFounded": {
+            "year": 1930
+          },
+          "companyBriefDescription": "At TI, we create world-changing technologies and foster a culture that redefines what’s possible. Change the World, Love your Job.",
+          "companyLinks": {
+            "facebook": "https://www.facebook.com/234443101357",
+            "instagram": "https://www.instagram.com/txinstruments",
+            "twitter": "https://twitter.com/txinstruments",
+            "customLinks": [
+              {
+                "name": "LinkedIn",
+                "url": "https://www.linkedin.com/company/1397"
+              },
+              {
+                "name": "YouTube",
+                "url": "http://www.youtube.com/texasinstruments"
+              },
+              {
+                "name": "Careers website",
+                "url": "http://careers.ti.com"
+              },
+              {
+                "name": "Company blog",
+                "url": "https://news.ti.com/index.cfm"
+              }
+            ],
+            "corporateWebsite": "http://www.ti.com"
+          },
+          "companyCeo": {
+            "name": "Haviv Ilan",
+            "photoUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_ceophoto/512x512/5cf6d4685f46196e00b54f2ae58d7c56",
+            "startDate": null
+          },
+          "requirements": []
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "jobKey": "78a676e03bae5b24",
+          "scrapingInfo": {
+            "page": 1,
+            "index": 6
+          },
+          "title": "Global Markets Analyst - AI Trainer",
+          "jobType": [
+            "Part-time",
+            "Full-time",
+            "Contract"
+          ],
+          "descriptionHtml": "<div><p>We are looking for a <b>Global Markets Analyst - AI Trainer</b> to join our team to train AI models. You will measure the progress of these AI chatbots, evaluate their logic, and solve problems to improve the quality of each model.</p>\n<p>In this role, you will need to hold an <b>expert level of financial reasoning</b>. CFA designation (or demonstrated progress toward it) is strongly preferred. Other relevant backgrounds include, but are not limited to: Portfolio Management, Equity Research, Fixed Income Analysis, Financial Accounting, Investment Banking, Wealth Management, and Insurance Planning.</p>\n<p><b>Benefits:</b></p>\n<ul>\n<li><i>This is a full-time or part-time REMOTE position</i></li>\n<li>You'll be able to choose which projects you want to work on</li>\n<li>You can work on your own schedule</li>\n<li>Projects are paid hourly from <b>$50 to $60 USD per hour</b>, with bonuses on high-quality and high-volume work</li>\n</ul>\n<p><b>Responsibilities:</b></p>\n<ul>\n<li>Present AI chatbots with diverse and complex financial problems, including those modeled on CFA scenarios, and rigorously evaluate their outputs</li>\n<li>Assess AI model responses for accuracy across core CFA curriculum domains: Ethics &amp; Standards, Portfolio Management, Equity &amp; Fixed Income Valuation, Derivatives, and Alternative Investments</li>\n<li>Evaluate financial models for correctness, methodology, and alignment with CFA Institute standards</li>\n<li>Provide structured feedback to improve AI reasoning across quantitative and qualitative finance tasks</li>\n</ul>\n<p><b>Qualifications:</b></p>\n<ul>\n<li>CFA Charterholder or active CFA candidate (Level I, II, or III) strongly preferred</li>\n<li>Fluency in English (native or bilingual level)</li>\n<li>Detail-oriented with strong analytical discipline</li>\n<li>Proficient in financial analysis, financial modeling, portfolio theory, valuation, and data analysis</li>\n<li>Familiarity with CFA Institute's Code of Ethics and Standards of Professional Conduct is a plus</li>\n<li>A current, in-progress, or completed Master's and/or PhD is a plus but not required</li>\n</ul>\n<p><b>Note:</b> Payment is made via PayPal. We will never ask for any money from you. PayPal will handle any currency conversions from USD.</p></div>",
+          "companyLogoUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_squarelogo/256x256/cc8dc489da5211695773d9f9020812b0",
+          "descriptionText": "We are looking for a Global Markets Analyst - AI Trainer to join our team to train AI models. You will measure the progress of these AI chatbots, evaluate their logic, and solve problems to improve the quality of each model.\n\nIn this role, you will need to hold an expert level of financial reasoning. CFA designation (or demonstrated progress toward it) is strongly preferred. Other relevant backgrounds include, but are not limited to: Portfolio Management, Equity Research, Fixed Income Analysis, Financial Accounting, Investment Banking, Wealth Management, and Insurance Planning.\n\nBenefits:\n\nThis is a full-time or part-time REMOTE position\nYou'll be able to choose which projects you want to work on\nYou can work on your own schedule\nProjects are paid hourly from $50 to $60 USD per hour, with bonuses on high-quality and high-volume work\n\nResponsibilities:\n\nPresent AI chatbots with diverse and complex financial problems, including those modeled on CFA scenarios, and rigorously evaluate their outputs\nAssess AI model responses for accuracy across core CFA curriculum domains: Ethics & Standards, Portfolio Management, Equity & Fixed Income Valuation, Derivatives, and Alternative Investments\nEvaluate financial models for correctness, methodology, and alignment with CFA Institute standards\nProvide structured feedback to improve AI reasoning across quantitative and qualitative finance tasks\n\nQualifications:\n\nCFA Charterholder or active CFA candidate (Level I, II, or III) strongly preferred\nFluency in English (native or bilingual level)\nDetail-oriented with strong analytical discipline\nProficient in financial analysis, financial modeling, portfolio theory, valuation, and data analysis\nFamiliarity with CFA Institute's Code of Ethics and Standards of Professional Conduct is a plus\nA current, in-progress, or completed Master's and/or PhD is a plus but not required\n\nNote: Payment is made via PayPal. We will never ask for any money from you. PayPal will handle any currency conversions from USD.",
+          "companyName": "DataAnnotation",
+          "companyUrl": "https://www.indeed.com/cmp/Dataannotation",
+          "companyHeaderUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_headerimage/1960x400/e42fbb2b9f70343758932438638f973c",
+          "location": {
+            "city": "Ocala",
+            "postalCode": null,
+            "country": "United States",
+            "countryCode": "US",
+            "formattedAddressLong": "Ocala, FL",
+            "formattedAddressShort": "Ocala, FL",
+            "latitude": 29.1872,
+            "longitude": -82.14009,
+            "streetAddress": null,
+            "fullAddress": "Ocala, FL"
+          },
+          "salary": {
+            "salaryCurrency": "USD",
+            "salaryMax": 60,
+            "salaryMin": 50,
+            "salarySource": "EXTRACTION",
+            "salaryText": "$50 - $60 an hour",
+            "salaryType": "hourly"
+          },
+          "rating": {
+            "rating": 4.1,
+            "count": 1646
+          },
+          "benefits": [],
+          "occupation": [
+            "Investment Management & Research Occupations",
+            "Data & Database Occupations",
+            "Finance & Accounting Occupations",
+            "Technology Occupations",
+            "Quantitative Financial Analysis Occupations",
+            "Investment Management & Financial Advisory Occupations",
+            "Data Scientists & Statisticians"
+          ],
+          "attributes": [
+            "AI models",
+            "AI chatbots",
+            "Financial model construction",
+            "Part-time",
+            "Financial model development",
+            "Hourly pay",
+            "Professional ethics",
+            "Full-time",
+            "English",
+            "Qualitative analysis",
+            "Remote",
+            "Master's degree",
+            "Analysis skills",
+            "Doctor of Philosophy",
+            "Accounting",
+            "Contract",
+            "Valuation modeling",
+            "Model training",
+            "Investment banking",
+            "Quantitative analysis",
+            "Senior level",
+            "Chartered Financial Analyst",
+            "Model evaluation",
+            "Investment portfolio construction",
+            "Equity research",
+            "Derivatives analysis",
+            "Financial markets knowledge"
+          ],
+          "contacts": [],
+          "shifts": [],
+          "socialInsurance": [],
+          "workingSystem": [],
+          "shiftAndSchedule": [],
+          "postedToday": false,
+          "hiringDemand": {
+            "isHighVolumeHiring": false,
+            "isUrgentHire": false
+          },
+          "datePublished": "2026-04-21",
+          "expired": false,
+          "source": "Surge AI",
+          "age": "2 months ago",
+          "isRemote": true,
+          "locale": "us",
+          "language": "en",
+          "jobUrl": "https://www.indeed.com/viewjob?jk=78a676e03bae5b24",
+          "emails": [],
+          "companyAddresses": [],
+          "companyNumEmployees": "Decline to state",
+          "companyRevenue": "Decline to state",
+          "companyDescription": "At DataAnnotation, you will join over 100k+ members to help train AI chatbots. Whether you are a writer, software developer, or someone who is looking for interesting work- we would love for you to join our team. We have paid out tens of millions of dollars to our current workforce and are eager to continue to offer new projects so that you can decide how you want to spend your time.\n",
+          "companyBriefDescription": "We hire contract writers and software developers to train AI chatbots. All opportunities are fully remote and you get to choose your own schedule!",
+          "companyLinks": {
+            "facebook": "https://www.facebook.com/dataannotation",
+            "instagram": "https://www.instagram.com/dataannotation.tech",
+            "twitter": "https://twitter.com/Data_Annotation",
+            "customLinks": [
+              {
+                "name": "YouTube",
+                "url": "https://www.youtube.com/@DataAnnotationTech/featured"
+              }
+            ],
+            "corporateWebsite": null
+          },
+          "companyCeo": {
+            "name": null,
+            "photoUrl": null,
+            "startDate": null
+          },
+          "numOfCandidates": null,
+          "requirements": []
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "jobKey": "63af3d67f205e13a",
+          "scrapingInfo": {
+            "page": 1,
+            "index": 7
+          },
+          "title": "BCBA Content Creator - Social Media & Marketing",
+          "jobType": [
+            "Part-time"
+          ],
+          "descriptionHtml": "<div><div><h2 class=\"jobSectionHeader\"><b>BCBA Content Creator</b></h2>\n<div>\nAbove and Beyond ABA Therapy<br>\nLocation: Flexible - Must be located in CO, GA, IN, NE, NC, OK, UT, VA, MD<br>\n<ul><li>️ Part-time (10 hours per week)</li></ul>\nThis position requires active BCBA or RBT certification. Candidates who do not hold a current Board Certified Behavior Analyst (BCBA) or Registered Behavior Technician (RBT) credential will not be considered.</div>\n<p>\nAbove and Beyond Therapy is looking for an exceptional BCBA who is ready to use their clinical expertise in a whole new way. We invest in the delivery of outstanding quality care by designing an environment where all employees can think big and have fun - and this role is exactly that.</p>\n</div>\n<div><div><p>Our company goal is simple: you should love what you do! Above &amp; Beyond Therapy is dedicated to the professional growth and personal happiness of all of our staff, and we constantly strive to create a supportive, collaborative, and creative workplace where everyone is excited to show up.</p>\n</div>\n</div><p></p><div><div><p><b>About the Role\n</b></p></div></div><div><div><p>We're looking for a BCBA who wants to use their clinical expertise to educate, inspire, and reach families beyond the therapy room. In this role, you'll join our Marketing team and serve as the <b>clinical voice of ABT</b> - creating videos, blogs, and social content that helps families understand ABA, trust our brand, and feel supported. All of it grounded in real clinical knowledge.</p>\n</div>\n</div><div><div><p>This is a part-time role that will grow with you. If you've ever thought &quot;I wish more families understood what we actually do&quot; - this is your platform.\n</p></div></div><p></p><div><div><p><b>What You'll Do ✅</b></p>\n</div>\n</div><div><div><ul><li>Create engaging video, written, and social media content across platforms including Instagram, TikTok, and Facebook - reels, educational posts, and stories that make ABA accessible to everyday families</li>\n<li>Serve as an authentic, on-camera clinical presence and trusted face of Above &amp; Beyond</li>\n<li>Collaborate with our Marketing Coordinator and Marketing Director to develop content calendars, campaigns, and educational series</li>\n<li>Visit ABT clinic locations to capture real, behind-the-scenes content (travel scope will evolve with the role)</li>\n<li>Translate complex clinical concepts into relatable, digestible language for parents and caregivers</li>\n<li>Monitor social media trends and adapt content to what's resonating on each platform</li>\n<li>Help build a brand that connects families to the care they deserve - at scale\n</li></ul></div></div><p></p><div><div><p><b>You Are\n</b></p></div></div><div><div><ul><li>✔️ An <b>active BCBA</b> in good standing with a strong clinical foundation</li>\n<li>✔️ <b>Natural on camera</b> - comfortable, confident, and engaging</li>\n<li>✔️ <b>Passionate about families</b> - you know how to speak to the parent experience and meet them where they are</li>\n<li>✔️ A <b>creative thinker and storyteller</b> who loves the content creation process</li>\n<li>✔️ <b>Socially fluent</b> - you're active on social media, understand what performs, and can ride a trend without sacrificing clinical integrity</li>\n<li>✔️ A <b>team player</b> who thrives in a collaborative, mission-driven environment</li>\n<li>✔️ Basic video editing skills a plus (CapCut or similar)\n</li></ul></div></div><p></p><div><div><p><b>What We Offer\n</b></p></div></div><div><div><ul><li>Competitive hourly rate: $70/hour+</li>\n<li><ul><li>Flexible part-time schedule at 10 hours per week that complements your existing clinical work</li></ul></li>\n<li>Direct collaboration with a passionate, supportive marketing team that values your clinical voice</li>\n<li>Continuing education support</li>\n<li>The chance to impact thousands of families</li>\n<li>A mission-driven team that genuinely cares - about clients, families, and you</li>\n</ul>\n</div></div><p>We may use artificial intelligence (AI) tools to support parts of the hiring process, such as reviewing applications, analyzing resumes, or assessing responses. These tools assist our recruitment team but do not replace human judgment. Final hiring decisions are ultimately made by humans. If you would like more information about how your data is processed, please contact us.</p></div>",
+          "companyLogoUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_squarelogo/256x256/e0251466af747cadcb9598eb6d477237",
+          "descriptionText": "BCBA Content Creator\n\nAbove and Beyond ABA Therapy\nLocation: Flexible - Must be located in CO, GA, IN, NE, NC, OK, UT, VA, MD\n ️ Part-time (10 hours per week)\nThis position requires active BCBA or RBT certification. Candidates who do not hold a current Board Certified Behavior Analyst (BCBA) or Registered Behavior Technician (RBT) credential will not be considered.\n\nAbove and Beyond Therapy is looking for an exceptional BCBA who is ready to use their clinical expertise in a whole new way. We invest in the delivery of outstanding quality care by designing an environment where all employees can think big and have fun - and this role is exactly that.\n\nOur company goal is simple: you should love what you do! Above & Beyond Therapy is dedicated to the professional growth and personal happiness of all of our staff, and we constantly strive to create a supportive, collaborative, and creative workplace where everyone is excited to show up.\n\nAbout the Role\n\nWe're looking for a BCBA who wants to use their clinical expertise to educate, inspire, and reach families beyond the therapy room. In this role, you'll join our Marketing team and serve as the clinical voice of ABT - creating videos, blogs, and social content that helps families understand ABA, trust our brand, and feel supported. All of it grounded in real clinical knowledge.\n\nThis is a part-time role that will grow with you. If you've ever thought \"I wish more families understood what we actually do\" - this is your platform.\n\nWhat You'll Do ✅\n\nCreate engaging video, written, and social media content across platforms including Instagram, TikTok, and Facebook - reels, educational posts, and stories that make ABA accessible to everyday families\nServe as an authentic, on-camera clinical presence and trusted face of Above & Beyond\nCollaborate with our Marketing Coordinator and Marketing Director to develop content calendars, campaigns, and educational series\nVisit ABT clinic locations to capture real, behind-the-scenes content (travel scope will evolve with the role)\nTranslate complex clinical concepts into relatable, digestible language for parents and caregivers\nMonitor social media trends and adapt content to what's resonating on each platform\nHelp build a brand that connects families to the care they deserve - at scale\n\nYou Are\n\n✔️ An active BCBA in good standing with a strong clinical foundation\n✔️ Natural on camera - comfortable, confident, and engaging\n✔️ Passionate about families - you know how to speak to the parent experience and meet them where they are\n✔️ A creative thinker and storyteller who loves the content creation process\n✔️ Socially fluent - you're active on social media, understand what performs, and can ride a trend without sacrificing clinical integrity\n✔️ A team player who thrives in a collaborative, mission-driven environment\n✔️ Basic video editing skills a plus (CapCut or similar)\n\nWhat We Offer\n\nCompetitive hourly rate: $70/hour+\n Flexible part-time schedule at 10 hours per week that complements your existing clinical work\nDirect collaboration with a passionate, supportive marketing team that values your clinical voice\nContinuing education support\nThe chance to impact thousands of families\nA mission-driven team that genuinely cares - about clients, families, and you\n\nWe may use artificial intelligence (AI) tools to support parts of the hiring process, such as reviewing applications, analyzing resumes, or assessing responses. These tools assist our recruitment team but do not replace human judgment. Final hiring decisions are ultimately made by humans. If you would like more information about how your data is processed, please contact us.",
+          "companyName": "Above & Beyond Therapy",
+          "companyUrl": "https://www.indeed.com/cmp/Above-&-Beyond-Therapy-1",
+          "companyHeaderUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_headerimage/1960x400/ccad8758f8f8cf13504ca0cf78ed94e8",
+          "location": {
+            "city": null,
+            "postalCode": null,
+            "country": "United States",
+            "countryCode": "US",
+            "formattedAddressLong": "Nebraska",
+            "formattedAddressShort": "Nebraska",
+            "latitude": 0,
+            "longitude": 0,
+            "streetAddress": null,
+            "fullAddress": "Nebraska"
+          },
+          "salary": {
+            "salaryCurrency": "USD",
+            "salaryMax": 80,
+            "salaryMin": 70,
+            "salarySource": "EXTRACTION",
+            "salaryText": "$70 - $80 an hour",
+            "salaryType": "hourly"
+          },
+          "rating": {
+            "rating": 4.4,
+            "count": 258
+          },
+          "benefits": [],
+          "occupation": [
+            "Digital Marketing Occupations",
+            "Social Media Occupations",
+            "Content Marketing Occupations",
+            "Marketing, Advertising & Public Relations Occupations",
+            "Marketing & Advertising Occupations"
+          ],
+          "attributes": [
+            "RBT Certification",
+            "Content marketing strategy development",
+            "Social media for health education",
+            "Social media engagement tracking",
+            "Video tutorial instructional content development",
+            "Part-time",
+            "Hourly pay",
+            "Mid-level",
+            "Video marketing",
+            "Clinic",
+            "Online blogs",
+            "Behavior analysis",
+            "Video communication",
+            "Brand storytelling",
+            "BCBA",
+            "Hybrid work",
+            "Educational video",
+            "TikTok",
+            "Facebook",
+            "Promotional video projects",
+            "Instagram",
+            "Educational content composition projects"
+          ],
+          "contacts": [],
+          "shifts": [],
+          "socialInsurance": [],
+          "workingSystem": [],
+          "shiftAndSchedule": [],
+          "postedToday": false,
+          "hiringDemand": {
+            "isHighVolumeHiring": false,
+            "isUrgentHire": false
+          },
+          "datePublished": "2026-05-21",
+          "expired": false,
+          "source": "Above and Beyond Therapy",
+          "age": "16 days ago",
+          "isRemote": false,
+          "locale": "us",
+          "language": "en",
+          "jobUrl": "https://www.indeed.com/viewjob?jk=63af3d67f205e13a",
+          "applyUrl": "https://jobs.lever.co/abtaba/cf9cd4b6-fc9b-4016-9b50-7d5916c32bf1?lever-source=Indeed",
+          "emails": [],
+          "companyAddresses": [],
+          "companyNumEmployees": "51 to 200",
+          "companyRevenue": "Decline to state",
+          "companyDescription": "We provide Applied behavior analysis (ABA) therapy services to bring about meaningful and positive change to those diagnosed with Autism Spectrum Disorder (ASD). Our dedicated team will take a multi-step approach built on documented and field-tested research to assist children in overcoming challenging behaviors associated with communication, social skills and academics.\r\nWe believe that every child has great potential and should have the chance to become active and productive members of their families and society while leading a happy, balanced and healthy lifestyle.\r\nOur mission is to make a difference for your family by providing individuals with autism and other special needs the opportunity to learn, socialize, grow and have fun. ",
+          "companyBriefDescription": "Above and Beyond Therapy provides Applied behavior analysis (ABA) therapy services to bring about meaningful and positive change to those diagnosed with Autism Spectrum Disorder (ASD).",
+          "companyLinks": {
+            "facebook": "https://www.facebook.com/aboveandbeyondtherapy",
+            "instagram": "https://www.instagram.com/aboveandbeyondaba",
+            "twitter": "https://twitter.com/abtabatherapy",
+            "customLinks": [
+              {
+                "name": "Careers Page",
+                "url": "https://www.abtaba.com/careers"
+              }
+            ],
+            "corporateWebsite": "http://www.abtaba.com"
+          },
+          "companyCeo": {
+            "name": null,
+            "photoUrl": null,
+            "startDate": null
+          },
+          "requirements": []
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "jobKey": "c97614de15cdb937",
+          "scrapingInfo": {
+            "page": 1,
+            "index": 8
+          },
+          "title": "SEO/GEO Director",
+          "jobType": [
+            "Full-time"
+          ],
+          "descriptionHtml": "<div><div><p><b>We are:</b></p></div><div><p>\nAccenture Song accelerates growth and value for our clients through sustained customer relevance. Our capabilities span ideation to execution: growth, product and experience design; technology and experience platforms; creative, media and marketing strategy; and campaign, content and channel orchestration. With strong client relationships and deep industry expertise, we help our clients operate at the speed of life through the unlimited potential of imagination, technology and intelligence. Visit us at: www.accenture.com/song</p></div><p></p><p><b>\nThe work:</b></p><p>\nThe SEO/GEO Executive Lead is the senior practitioner on the team &mdash; equally at home in a technical audit, a client strategy session, and a roadmap review with engineering. You will lead a team of SEO specialists, own the relationship with senior client stakeholders, and personally drive the quality and direction of the work.</p><p></p><p>\nThe right person for this role has done the work at scale, knows what good looks like, and can bring others along without losing sight of execution.</p><p></p><p><b>\nLead the work &mdash; and do it</b></p><ul><li><p>\nOwn the end-to-end SEO strategy across a large, complex web environment, from technical foundations through content and measurement</p></li><li><p>\nPersonally conduct and QA audits, prioritization frameworks, and execution plans &mdash; not just delegate them</p></li><li><p>\nStep into execution mode when the work demands it, whether that means resolving a crawlability issue, structuring a migration plan, or troubleshooting indexation at the page level</p></li><li><p>\nHold yourself and your team to deadlines, and create the conditions for others to do the same</p></li></ul><p></p><p><b>\nTechnical SEO ownership</b></p><ul><li><p>\nLead technical strategy and execution across crawlability, indexation, rendering, and site architecture</p></li><li><p>\nDrive complex workstreams including site migrations, internationalization, canonicalization strategy, and URL structure decisions</p></li><li><p>\nBuild and govern systems for internal linking, structured data, pagination, and faceted navigation at scale</p></li><li><p>\nPartner directly with engineering teams &mdash; not just hand over tickets, but sit in the work, understand constraints, and find solutions together</p></li></ul><p></p><p><b>\nTranslate strategy into execution</b></p><ul><li><p>\nTake business priorities, platform changes, org shifts, and emerging channel dynamics and turn them into clear, sequenced SEO roadmaps that multiple teams can act on</p></li><li><p>\nProvide practical, prioritized guidance to content, development, UX, analytics, and governance stakeholders &mdash; especially when everything feels equally urgent</p></li><li><p>\nCommunicate confidently with senior client stakeholders, framing SEO decisions in terms of business impact and risk</p></li></ul><p></p><p><b>\nBuild for scale through tooling and automation</b></p><ul><li><p>\nDesign workflows that reduce manual SEO work using enterprise SEO platforms, crawlers, analytics tools, APIs, and custom scripting where appropriate</p></li><li><p>\nDevelop templated approaches and repeatable processes that raise the floor of the team's output</p></li><li><p>\nEvaluate and implement tooling with a systems mindset &mdash; how it supports process, not just what it surfaces in a report</p></li></ul><p></p><p><b>\nManage and develop the team</b></p><ul><li><p>\nLead, coach, and quality-check the work of SEO specialists across the program</p></li><li><p>\nCreate clarity on priorities and ownership so the team can move with confidence</p></li><li><p>\nBuild a team culture where craft, accountability, and intellectual curiosity are the norm</p></li></ul></div>\n<br>\n<div><div><p><b>Here&rsquo;s</b><b> </b><b>what</b><b> </b><b>you</b><b>&rsquo;ll</b><b> </b><b>need:</b></p></div><div><ul><li>\n10+ years of experience in a similar SEO role including the following:\n<ul><li>Technical SEO experience, including experience partnering with engineering and site architecture</li><li>\nExperience with enterprise level SEO tools to automate SEO processes (enterprise SEO platforms, crawlers, analytics, custom scripts, APIs)</li><li>\nExperience leading and executing large-scale SEO transformations (leading the work &amp; working alongside SEO specialists where needed)</li><li>\nGEO experience and understanding how content, structure, schema, and authority affect LLM visibility</li><li>\nAbility to work in a fast paced and demanding environment as well as to balance several clients needs simultaneously</li></ul></li></ul></div><p></p><div><p><b>\nBonus</b><b> </b><b>p</b><b>oints if:</b></p></div><div><ul><li><p>\nBachelor's degree or equivalent work experience</p></li><li><p>\nExpertise on content systems and information architecture</p></li><li><p>\nPassionate about SEO, data, analytics and technology</p></li></ul></div><p></p><p><br>\nCompensation at Accenture varies depending on a wide array of factors, which may include but are not limited to the specific office location, role, skill set, and level of experience. As required by local law, Accenture provides a reasonable range of compensation for roles that may be hired as set forth below.<br>\nWe anticipate this job posting will be posted until 07/03/2026.<br>\n<br>\nAccenture offers a market competitive suite of benefits including medical, dental, vision, life, and long-term disability coverage, a 401(k) plan, bonus opportunities, paid holidays, and paid time off. See more information on our benefits here:</p><p></p><p>\nU.S. Employee Benefits | Accenture</p><p><br>\nRole Location Annual Salary Range<br>\nCalifornia $132,500 to $302,400<br>\nCleveland $122,700 to $241,900<br>\nColorado $132,500 to $261,300<br>\nDistrict of Columbia $141,100 to $278,200<br>\nIllinois $122,700 to $261,300<br>\nMaryland $132,500 to $261,300<br>\nMassachusetts $132,500 to $278,200<br>\nMinnesota $132,500 to $261,300<br>\nNew York $122,700 to $302,400<br>\nNew Jersey $141,100 to $302,400<br>\nWashington $141,100 to $278,200</p><p></p><p><b>\nRequesting an Accommodation</b></p><p>\nAccenture is committed to providing equal employment opportunities for persons with disabilities or religious observances, including reasonable accommodation when needed. If you are hired by Accenture and require accommodation to perform the essential functions of your role, you will be asked to participate in our reasonable accommodation process. Accommodations made to facilitate the recruiting process are not a guarantee of future or continued accommodations once hired.</p><p>\nIf you would like to be considered for employment opportunities with Accenture and have accommodation needs such as for a disability or religious observance, please call us toll free at 1 (877) 889-9009 or send us an email or speak with your recruiter.</p><p></p><p><b><br>\nEqual Employment Opportunity Statement</b></p><p>\nWe believe that no one should be discriminated against because of their differences. All employment decisions shall be made without regard to age, race, creed, color, religion, sex, national origin, ancestry, disability status, veteran status, sexual orientation, gender identity or expression, genetic information, marital status, citizenship status or any other basis as protected by federal, state, or local law. Our rich diversity makes us more innovative, more competitive, and more creative, which helps us better serve our clients and our communities.</p><p>\nFor details, view a copy of the Accenture Equal Opportunity Statement</p><p>\nAccenture is an EEO and Affirmative Action Employer of Veterans/Individuals with Disabilities.</p><p>\nAccenture is committed to providing veteran employment opportunities to our service men and women.</p><p></p><p><b><br>\nOther Employment Statements</b></p><p>\nApplicants for employment in the US must have work authorization that does not now or in the future require sponsorship of a visa for employment authorization in the United States.</p><p>\nCandidates who are currently employed by a client of Accenture or an affiliated Accenture business may not be eligible for consideration.</p><p>\nJob candidates will not be obligated to disclose sealed or expunged records of conviction or arrest as part of the hiring process. Further, at Accenture a criminal conviction history is not an absolute bar to employment.</p><p>\nThe Company will not discharge or in any other manner discriminate against employees or applicants because they have inquired about, discussed, or disclosed their own pay or the pay of another employee or applicant. Additionally, employees who have access to the compensation information of other employees or applicants as a part of their essential job functions cannot disclose the pay of other employees or applicants to individuals who do not otherwise have access to compensation information, unless the disclosure is (a) in response to a formal complaint or charge, (b) in furtherance of an investigation, proceeding, hearing, or action, including an investigation conducted by the employer, or (c) consistent with the Company's legal duty to furnish information.</p><p>\nCalifornia requires additional notifications for applicants and employees. If you are a California resident, live in or plan to work from Los Angeles County upon being hired for this position, please click here for additional important information.</p><p>\nPlease read Accenture&rsquo;s Recruiting and Hiring Statement for more information on how we process your data during the Recruiting and Hiring process.</p></div>",
+          "companyLogoUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_squarelogo/256x256/e1bd47363c07b64a9578dbf71edbf4e4",
+          "descriptionText": "We are:\n\nAccenture Song accelerates growth and value for our clients through sustained customer relevance. Our capabilities span ideation to execution: growth, product and experience design; technology and experience platforms; creative, media and marketing strategy; and campaign, content and channel orchestration. With strong client relationships and deep industry expertise, we help our clients operate at the speed of life through the unlimited potential of imagination, technology and intelligence. Visit us at: www.accenture.com/song\n\nThe work:\n\nThe SEO/GEO Executive Lead is the senior practitioner on the team — equally at home in a technical audit, a client strategy session, and a roadmap review with engineering. You will lead a team of SEO specialists, own the relationship with senior client stakeholders, and personally drive the quality and direction of the work.\n\nThe right person for this role has done the work at scale, knows what good looks like, and can bring others along without losing sight of execution.\n\nLead the work — and do it\n\nOwn the end-to-end SEO strategy across a large, complex web environment, from technical foundations through content and measurement\n\nPersonally conduct and QA audits, prioritization frameworks, and execution plans — not just delegate them\n\nStep into execution mode when the work demands it, whether that means resolving a crawlability issue, structuring a migration plan, or troubleshooting indexation at the page level\n\nHold yourself and your team to deadlines, and create the conditions for others to do the same\n\nTechnical SEO ownership\n\nLead technical strategy and execution across crawlability, indexation, rendering, and site architecture\n\nDrive complex workstreams including site migrations, internationalization, canonicalization strategy, and URL structure decisions\n\nBuild and govern systems for internal linking, structured data, pagination, and faceted navigation at scale\n\nPartner directly with engineering teams — not just hand over tickets, but sit in the work, understand constraints, and find solutions together\n\nTranslate strategy into execution\n\nTake business priorities, platform changes, org shifts, and emerging channel dynamics and turn them into clear, sequenced SEO roadmaps that multiple teams can act on\n\nProvide practical, prioritized guidance to content, development, UX, analytics, and governance stakeholders — especially when everything feels equally urgent\n\nCommunicate confidently with senior client stakeholders, framing SEO decisions in terms of business impact and risk\n\nBuild for scale through tooling and automation\n\nDesign workflows that reduce manual SEO work using enterprise SEO platforms, crawlers, analytics tools, APIs, and custom scripting where appropriate\n\nDevelop templated approaches and repeatable processes that raise the floor of the team's output\n\nEvaluate and implement tooling with a systems mindset — how it supports process, not just what it surfaces in a report\n\nManage and develop the team\n\nLead, coach, and quality-check the work of SEO specialists across the program\n\nCreate clarity on priorities and ownership so the team can move with confidence\n\nBuild a team culture where craft, accountability, and intellectual curiosity are the norm\n\nHere’s what you’ll need:\n\n10+ years of experience in a similar SEO role including the following:\nTechnical SEO experience, including experience partnering with engineering and site architecture\nExperience with enterprise level SEO tools to automate SEO processes (enterprise SEO platforms, crawlers, analytics, custom scripts, APIs)\nExperience leading and executing large-scale SEO transformations (leading the work & working alongside SEO specialists where needed)\nGEO experience and understanding how content, structure, schema, and authority affect LLM visibility\nAbility to work in a fast paced and demanding environment as well as to balance several clients needs simultaneously\n\nBonus points if:\n\nBachelor's degree or equivalent work experience\n\nExpertise on content systems and information architecture\n\nPassionate about SEO, data, analytics and technology\n\nCompensation at Accenture varies depending on a wide array of factors, which may include but are not limited to the specific office location, role, skill set, and level of experience. As required by local law, Accenture provides a reasonable range of compensation for roles that may be hired as set forth below.\nWe anticipate this job posting will be posted until 07/03/2026.\n\nAccenture offers a market competitive suite of benefits including medical, dental, vision, life, and long-term disability coverage, a 401(k) plan, bonus opportunities, paid holidays, and paid time off. See more information on our benefits here:\n\nU.S. Employee Benefits | Accenture\n\nRole Location Annual Salary Range\nCalifornia $132,500 to $302,400\nCleveland $122,700 to $241,900\nColorado $132,500 to $261,300\nDistrict of Columbia $141,100 to $278,200\nIllinois $122,700 to $261,300\nMaryland $132,500 to $261,300\nMassachusetts $132,500 to $278,200\nMinnesota $132,500 to $261,300\nNew York $122,700 to $302,400\nNew Jersey $141,100 to $302,400\nWashington $141,100 to $278,200\n\nRequesting an Accommodation\n\nAccenture is committed to providing equal employment opportunities for persons with disabilities or religious observances, including reasonable accommodation when needed. If you are hired by Accenture and require accommodation to perform the essential functions of your role, you will be asked to participate in our reasonable accommodation process. Accommodations made to facilitate the recruiting process are not a guarantee of future or continued accommodations once hired.\n\nIf you would like to be considered for employment opportunities with Accenture and have accommodation needs such as for a disability or religious observance, please call us toll free at 1 (877) 889-9009 or send us an email or speak with your recruiter.\n\nEqual Employment Opportunity Statement\n\nWe believe that no one should be discriminated against because of their differences. All employment decisions shall be made without regard to age, race, creed, color, religion, sex, national origin, ancestry, disability status, veteran status, sexual orientation, gender identity or expression, genetic information, marital status, citizenship status or any other basis as protected by federal, state, or local law. Our rich diversity makes us more innovative, more competitive, and more creative, which helps us better serve our clients and our communities.\n\nFor details, view a copy of the Accenture Equal Opportunity Statement\n\nAccenture is an EEO and Affirmative Action Employer of Veterans/Individuals with Disabilities.\n\nAccenture is committed to providing veteran employment opportunities to our service men and women.\n\nOther Employment Statements\n\nApplicants for employment in the US must have work authorization that does not now or in the future require sponsorship of a visa for employment authorization in the United States.\n\nCandidates who are currently employed by a client of Accenture or an affiliated Accenture business may not be eligible for consideration.\n\nJob candidates will not be obligated to disclose sealed or expunged records of conviction or arrest as part of the hiring process. Further, at Accenture a criminal conviction history is not an absolute bar to employment.\n\nThe Company will not discharge or in any other manner discriminate against employees or applicants because they have inquired about, discussed, or disclosed their own pay or the pay of another employee or applicant. Additionally, employees who have access to the compensation information of other employees or applicants as a part of their essential job functions cannot disclose the pay of other employees or applicants to individuals who do not otherwise have access to compensation information, unless the disclosure is (a) in response to a formal complaint or charge, (b) in furtherance of an investigation, proceeding, hearing, or action, including an investigation conducted by the employer, or (c) consistent with the Company's legal duty to furnish information.\n\nCalifornia requires additional notifications for applicants and employees. If you are a California resident, live in or plan to work from Los Angeles County upon being hired for this position, please click here for additional important information.\n\nPlease read Accenture’s Recruiting and Hiring Statement for more information on how we process your data during the Recruiting and Hiring process.",
+          "companyName": "Accenture",
+          "companyUrl": "https://www.indeed.com/cmp/Accenture",
+          "companyHeaderUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_headerimage/1960x400/e2e8513ab9a4e52967d6e44d740cf78e",
+          "location": {
+            "city": "New York",
+            "postalCode": null,
+            "country": "United States",
+            "countryCode": "US",
+            "formattedAddressLong": "New York, NY",
+            "formattedAddressShort": "New York, NY",
+            "latitude": 40.71427,
+            "longitude": -74.00597,
+            "streetAddress": null,
+            "fullAddress": "New York, NY"
+          },
+          "salary": {
+            "salaryCurrency": "USD",
+            "salaryMax": 302400,
+            "salaryMin": 122700,
+            "salarySource": "EXTRACTION",
+            "salaryText": "$122,700 - $302,400 a year",
+            "salaryType": "yearly"
+          },
+          "rating": {
+            "rating": 3.9,
+            "count": 28607
+          },
+          "benefits": [
+            "Paid holidays",
+            "Disability insurance",
+            "Health insurance",
+            "Dental insurance",
+            "401(k)",
+            "Paid time off",
+            "Vision insurance"
+          ],
+          "occupation": [
+            "Digital Marketing Occupations",
+            "Search Marketing Occupations",
+            "Search Engine Optimization Specialists",
+            "Marketing, Advertising & Public Relations Occupations",
+            "Marketing & Advertising Occupations"
+          ],
+          "attributes": [
+            "Customer relationship building",
+            "Team supervision",
+            "Tooling",
+            "Coaching",
+            "Paid holidays",
+            "Process design",
+            "Leading organic search traffic initiatives",
+            "Full-time",
+            "Disability insurance",
+            "Yearly pay",
+            "SEO error detection and correction",
+            "Health insurance",
+            "Dental insurance",
+            "401(k)",
+            "Team development",
+            "Quality assurance audits",
+            "Bachelor's degree",
+            "Paid time off",
+            "US work authorization",
+            "Military encouraged",
+            "Scripting",
+            "Bonus opportunities",
+            "Leading team collaboration initiatives",
+            "APIs",
+            "Experience equivalent to degree accepted",
+            "Vision insurance",
+            "Quality audits",
+            "Implementation of strategic initiatives",
+            "Senior level",
+            "Achieving project delivery timelines",
+            "Leadership",
+            "Managing clients in a search marketing role",
+            "Delegation",
+            "Automation tools",
+            "Content architecture",
+            "Project stakeholder communication",
+            "Information architecture",
+            "Data analytics technologies",
+            "Senior leadership",
+            "Team building",
+            "Stakeholder management",
+            "10 years"
+          ],
+          "contacts": [],
+          "shifts": [],
+          "socialInsurance": [
+            "Health insurance"
+          ],
+          "workingSystem": [],
+          "shiftAndSchedule": [],
+          "postedToday": false,
+          "hiringDemand": {
+            "isHighVolumeHiring": false,
+            "isUrgentHire": false
+          },
+          "datePublished": "2026-05-29",
+          "expired": false,
+          "source": "Accenture",
+          "age": "9 days ago",
+          "isRemote": false,
+          "locale": "us",
+          "language": "en",
+          "jobUrl": "https://www.indeed.com/viewjob?jk=c97614de15cdb937",
+          "applyUrl": "https://accenture.com/us-en/careers/jobdetails?id=R00331148_en",
+          "emails": [],
+          "companyAddresses": [
+            "Dublin, Dublin"
+          ],
+          "companyNumEmployees": "10,000+",
+          "companyRevenue": "more than $10B (USD)",
+          "companyFounded": {
+            "year": 1989
+          },
+          "companyBriefDescription": "With 779,000 people serving clients in more than 120 countries, Accenture brings continuous innovation to help clients improve their performance and create lasting value across their enterprises.",
+          "companyLinks": {
+            "facebook": "https://www.facebook.com/AccentureUS",
+            "instagram": "https://www.instagram.com/accentureus",
+            "twitter": "",
+            "customLinks": [
+              {
+                "name": "Careers Page",
+                "url": "https://www.accenture.com/us-en/careers"
+              }
+            ],
+            "corporateWebsite": "https://www.accenture.com"
+          },
+          "companyCeo": {
+            "name": "Julie Sweet",
+            "photoUrl": "https://d2q79iu7y748jz.cloudfront.net/s/_ceophoto/512x512/19d1bcd242049e657dac03c55f243543",
+            "startDate": null
+          },
+          "requirements": []
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Run an Actor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run an Actor": {
+      "main": [
+        [
+          {
+            "node": "Get dataset items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get dataset items": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ccca1e76-ef89-457f-b56c-65aca22c4fd4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f5e6b48ebf35ad0ac65c2e53babdcaa08646ac2899124ecd8423973a757342fe"
+  },
+  "nodeGroups": [],
+  "id": "NrfWUvtkGKF8yeQt",
+  "tags": []
+}
